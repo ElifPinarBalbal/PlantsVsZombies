@@ -1,5 +1,5 @@
 /****************************************************************************
-Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 
  http://www.cocos2d-x.org
 
@@ -22,8 +22,8 @@ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
  THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef __HELLOWORLD_SCENE_H__
-#define __HELLOWORLD_SCENE_H__
+#ifndef __SECOND_SCENE_H__
+#define __SECOND_SCENE_H__
 
 #include "ui/UIButton.h"
 #include  "cocos/2d/CCNode.h"
@@ -31,20 +31,33 @@ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 #include  "cocos/2d/CCScene.h"
 #include  "cocos/2d/CCLabel.h"
 
-class HelloWorldScene : public cocos2d::Scene
+class SecondScene : public cocos2d::Scene
 {
+    static constexpr int GRID_COLS = 9;
+    static constexpr int GRID_ROWS = 5;
 public:
     static cocos2d::Scene* createScene();
 
     virtual bool init();
-    // a selector callback
     void menuCloseCallback(cocos2d::Ref* pSender);
+    void CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize);
 
-    // implement the "static create()" method manually
-    CREATE_FUNC(HelloWorldScene);
+    CREATE_FUNC(SecondScene);
+
+
+
 private:
-    cocos2d::Label* mLabel = nullptr;
+    cocos2d::Sprite* mTowerSprite = nullptr;
+    cocos2d::Sprite* mZombieSprite = nullptr;
+    cocos2d::Sprite* mPeaShooterSprite = nullptr;
+    cocos2d::Sprite* mPeaSprite = nullptr;
 
+    cocos2d::Sprite* mTiles[GRID_ROWS][GRID_COLS] = {};
+    cocos2d::Size mCellSize;
+    cocos2d::Vec2 mGridOrigin;
+
+    void BuildGroundGrid(const cocos2d::Size& visibleSize, const cocos2d::Vec2& origin);
+    cocos2d::Vec2 CellCenter(int col, int row) const;
 };
 
-#endif // __HELLOWORLD_SCENE_H__
+#endif // __SECOND_SCENE_H__

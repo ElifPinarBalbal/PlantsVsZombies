@@ -1,0 +1,391 @@
+/****************************************************************************
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
+
+ http://www.cocos2d-x.org
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ ****************************************************************************/
+
+#include "HelloWorldScene.h"
+#include "cocos/2d/CCMenu.h"
+#include "cocos/2d/CCMenuItem.h"
+#include "cocos/2d/CCLabel.h"
+#include "cocos/2d/CCSprite.h"
+#include "cocos/base/CCDirector.h"
+#include  "SecondScene.h"
+
+#include "2d/CCActionInstant.h"
+#include "2d/CCActionInterval.h"
+#include "cocos/2d/CCAnimation.h"
+
+USING_NS_CC;
+
+using namespace cocos2d::ui;
+using namespace std;
+using cocos2d::Sprite;
+using cocos2d::Vec2;
+using cocos2d::Size;
+
+namespace button
+{
+    constexpr float BACK_BUTTON_MARGIN_X       = 20.f;
+    constexpr float BACK_BUTTON_MARGIN_Y       = 20.f;
+    constexpr float BACK_BUTTON_RATIO_POS_X    = 0.3f;
+    constexpr float BACK_BUTTON_RATIO_POS_Y    = 0.3f;
+}
+
+namespace zombie {
+    constexpr float ZOMBIE_SPEED_PER_SECOND     = 20.f;
+    constexpr float ZOMBIE_STOP_X               = 100.f;
+    constexpr float ZOMBIE_HEALTH_MAX           = 50.f;
+}
+
+namespace grid {
+    constexpr float MARGIN_L                    = 185.f;
+    constexpr float MARGIN_R                    = 22.f;
+    constexpr float MARGIN_B                    = 20.f;
+    constexpr float MARGIN_T                    = 50.f;
+
+    inline float fieldWidth (const cocos2d::Size& vs)  { return vs.width  - (MARGIN_L + MARGIN_R); }
+    inline float fieldHeight (const cocos2d::Size& vs)  { return vs.height - (MARGIN_T + MARGIN_B); }
+}
+
+Scene* SecondScene::createScene()
+{
+    return SecondScene::create();
+}
+
+// Print useful error message instead of segfault when files are not there.
+static void problemLoading(const char* filename)
+{
+    printf("Error while loading: %s\n", filename);
+    printf("Depending on how you compiled you might have to add 'Resources/' in front of filenames in HelloWorldScene.cpp\n");
+}
+
+// Back Button create function
+cocos2d::ui::Button* CreateBackButton(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
+{
+    auto* const backButton = cocos2d::ui::Button::create("Red_button.png", "Red_button.png");
+    if (!backButton)
+    {
+        problemLoading("Red_button.png");
+        return nullptr;
+    }
+
+    const cocos2d::Size& backButtonContentSize = backButton->getContentSize();
+
+    backButton->setScale(0.6f);
+    backButton->setTitleText("");
+    backButton->setTitleFontSize(48);
+    backButton->setTitleAlignment(cocos2d::TextHAlignment::CENTER,
+                                  cocos2d::TextVAlignment::CENTER);
+
+    backButton->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_RIGHT);
+
+    const float marginX = button::BACK_BUTTON_MARGIN_X;;
+    const float marginY = button::BACK_BUTTON_MARGIN_Y;;
+    backButton->setPosition({
+        origin.x + visibleSize.width  - marginX,
+        origin.y +                      marginY
+    });
+    return backButton;
+}
+
+cocos2d::ui::Button* CreateRightButton(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
+{
+    auto* const rightButton = cocos2d::ui::Button::create("rightButton.png", "rightButton.png");
+    if (!rightButton)
+    {
+        problemLoading("rightButton.png");
+        return nullptr;
+    }
+    rightButton->setScale(0.3f);
+    rightButton->setTitleAlignment(cocos2d::TextHAlignment::CENTER,
+                                  cocos2d::TextVAlignment::CENTER);
+
+    rightButton->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_RIGHT);
+
+    const float marginX = button::BACK_BUTTON_MARGIN_X;;
+    const float marginY = button::BACK_BUTTON_MARGIN_Y;;
+    rightButton->setPosition({
+        origin.x + visibleSize.width  - marginX - 50.f,
+        origin.y +                      marginY + 100.f
+    });
+    return rightButton;
+}
+
+cocos2d::ui::Button* CreateLeftButton(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
+{
+    auto* const leftButton = cocos2d::ui::Button::create("leftButton.png", "leftButton.png");
+    if (!leftButton)
+    {
+        problemLoading("leftButton.png");
+        return nullptr;
+    }
+    leftButton->setScale(0.3f);
+    leftButton->setTitleAlignment(cocos2d::TextHAlignment::CENTER,
+                                  cocos2d::TextVAlignment::CENTER);
+
+    leftButton->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_RIGHT);
+
+    const float marginX = button::BACK_BUTTON_MARGIN_X;;
+    const float marginY = button::BACK_BUTTON_MARGIN_Y;;
+    leftButton->setPosition({
+        origin.x + visibleSize.width  - marginX - 150,
+        origin.y +                      marginY + 100
+    });
+    return leftButton;
+}
+
+cocos2d::Sprite* CreateZombieSprite (const cocos2d::Size& visibleSize) {
+    auto* const zombie = cocos2d::Sprite::create("zombie.png");
+    if (!zombie) {
+        problemLoading("zombie.png");
+        return nullptr;
+    }
+
+    zombie->setPosition(650.f, 280.f);
+    zombie->setScale(0.8f);
+    return zombie;
+}
+
+cocos2d::Sprite* CreatePeaShooterSprite (const cocos2d::Size& visibleSize) {
+    auto* const peaShooter = cocos2d::Sprite::create("peaShooter.png");
+    if (!peaShooter) {
+        problemLoading("peaShooter.png");
+        return nullptr;
+    }
+
+    peaShooter->setPosition({
+        210.f, 270.f
+    });
+    peaShooter->setScale(0.2f);
+    return peaShooter;
+}
+
+cocos2d::Sprite* CreatePeaSprite (const cocos2d::Size& visibleSize) {
+    auto* const pea = cocos2d::Sprite::create("pea.png");
+    if (!pea) {
+        problemLoading("pea.png");
+        return nullptr;
+    }
+
+    pea->setScale(1.0f);
+    return pea;
+}
+
+// Grid Layout
+void SecondScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
+{
+    const float fieldW = grid::fieldWidth(visibleSize);
+    const float fieldH = grid::fieldHeight(visibleSize);
+
+    mCellSize   = Size(fieldW / GRID_COLS, fieldH / GRID_ROWS);
+    mGridOrigin = Vec2(origin.x + grid::MARGIN_L, origin.y + grid::MARGIN_B);
+
+    for (int r = 0; r < GRID_ROWS; ++r)
+    {
+        for (int c = 0; c < GRID_COLS; ++c)
+        {
+            const bool light = ((r + c) % 2 == 0);
+            const char* file = light ? "ground_light.png" : "ground_dark.png";
+
+            auto* tile = Sprite::create(file);
+            if (!tile) { problemLoading(file); continue; }
+
+            // scale to cell size
+            const Size tex = tile->getContentSize();
+            tile->setScaleX(mCellSize.width  / tex.width);
+            tile->setScaleY(mCellSize.height / tex.height);
+
+            // center of this cell
+            const float cx = mGridOrigin.x + mCellSize.width  * (c + 0.5f);
+            const float cy = mGridOrigin.y + mCellSize.height * (r + 0.5f);
+            tile->setPosition(Vec2(cx, cy));
+
+            this->addChild(tile, 0);           // behind everything
+            mTiles[r][c] = tile;               // store for later (hover, highlight, etc.)
+        }
+    }
+}
+
+// this function coverts the grid coordinate into actual pixel positions
+Vec2 SecondScene::CellCenter(int col, int row) const
+{
+    col = max(0, min(GRID_COLS - 1, col));
+    row = max(0, min(GRID_ROWS - 1, row));
+    return Vec2(
+        mGridOrigin.x + mCellSize.width  * (col + 0.5f),
+        mGridOrigin.y + mCellSize.height * (row + 0.5f)
+    );
+}
+
+
+
+void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
+{
+    if (auto* const backButton = CreateBackButton(origin, visibleSize))
+    {
+        backButton->addTouchEventListener([&](cocos2d::Ref*, ui::Widget::TouchEventType t) {
+            if (t == ui::Widget::TouchEventType::ENDED) {
+                cocos2d::Director::getInstance()->popScene();
+            }
+        });
+        this->addChild(backButton, 10);
+    }
+
+    if (auto* const zombie = CreateZombieSprite(visibleSize)) {
+        mZombieSprite = zombie;
+        this->addChild(zombie, 5);
+
+        // start move left
+        this->schedule([=](float dt) {
+            if (!mZombieSprite) return;
+
+            float x = mZombieSprite->getPositionX();
+            x-= zombie::ZOMBIE_SPEED_PER_SECOND * dt;
+
+            if (x <= zombie::ZOMBIE_STOP_X) {
+                x = zombie::ZOMBIE_STOP_X;
+            }
+            mZombieSprite->setPositionX(x);
+        },"zombie_walk");
+    }
+
+    if (auto* const peaShooter = CreatePeaShooterSprite(visibleSize)) {
+        mPeaShooterSprite = peaShooter;
+        this->addChild(peaShooter, 5);
+    }
+
+    if (auto* const pea = CreatePeaSprite(visibleSize)) {
+        mPeaSprite = pea;
+        this->addChild(pea, 5);
+    }
+
+    if (mPeaShooterSprite && mZombieSprite) {
+        // shoot the zombie with pea periodically
+        this->schedule([=](float) {    // starts a timer
+            // create pea
+            auto pea = CreatePeaSprite(Director::getInstance()->getVisibleSize());  // create pea only if there are both peaShooter and zombie
+            if (!pea) return;
+
+            const cocos2d::Vec2 muzzleOffset(40.f, 20.f);  // to make the pea occur from the "mouth" of the peaShooter
+            const cocos2d::Vec2 startPos = mPeaShooterSprite->getPosition() + muzzleOffset;
+            pea->setPosition(startPos);
+            this->addChild(pea, 8);
+
+            const cocos2d::Vec2 target(mZombieSprite->getPositionX() - 25.f, startPos.y);  // the target that pea should go - it will go horizontally straight
+
+            const float speed = 300.0f;
+            const float distance = startPos.distance(target);
+            float duration = distance / speed;
+
+            auto move = cocos2d::MoveTo::create(duration, target);
+            auto remove = cocos2d::CallFunc::create([pea]() {pea->removeFromParent();});   // after hiting the zombie, pea will be destroyed
+
+            pea->runAction(cocos2d::Sequence::create(move, remove, nullptr));
+        }, 0.8f, "pea_fire_timer");  // per 0.8 seconds
+    }
+
+    if (auto* const rightButton = CreateRightButton(origin, visibleSize))
+    {
+        rightButton->addTouchEventListener([&](cocos2d::Ref*, ui::Widget::TouchEventType t) {
+            if (t == ui::Widget::TouchEventType::ENDED) {
+            }
+
+            else if (t == ui::Widget::TouchEventType::MOVED) {
+            }
+        });
+
+        //this->addChild(rightButton, 10);
+    }
+
+    if (auto* const leftButton = CreateLeftButton(origin, visibleSize))
+    {
+
+        leftButton->addTouchEventListener([&](cocos2d::Ref*, ui::Widget::TouchEventType t) {
+            if (t == ui::Widget::TouchEventType::ENDED) {
+            }
+            else if (t == ui::Widget::TouchEventType::MOVED) {
+            }
+        });
+        //this->addChild(leftButton, 10);
+    }
+}
+
+// on "init" you need to initialize your instance
+bool SecondScene::init()
+{
+    if ( !Scene::init() )
+    {
+        return false;
+    }
+
+    auto visibleSize = Director::getInstance()->getVisibleSize();
+    Vec2 origin = Director::getInstance()->getVisibleOrigin();
+
+    auto background = Sprite::create("mapp.png");
+
+    if (background) {
+        background->setPosition(origin.x + visibleSize.width / 2,
+                            origin.y + visibleSize.height / 2);
+
+        // scale it to fit the screen size if needed
+        float scaleX = visibleSize.width  / background->getContentSize().width;
+        float scaleY = visibleSize.height / background->getContentSize().height;
+        background->setScaleX(scaleX);
+        background->setScaleY(scaleY);
+
+        // add it at z-order 0 so it stays behind everything else
+        this->addChild(background, 0);
+
+    }
+    BuildGroundGrid(visibleSize, origin);
+
+    auto closeItem = MenuItemImage::create(
+                                           "CloseNormal.png",
+                                           "CloseSelected.png",
+                                           CC_CALLBACK_1(SecondScene::menuCloseCallback, this));
+
+    if (closeItem == nullptr ||
+        closeItem->getContentSize().width <= 0 ||
+        closeItem->getContentSize().height <= 0)
+    {
+        problemLoading("'CloseNormal.png' and 'CloseSelected.png'");
+    }
+    else
+    {
+        float x = origin.x + visibleSize.width - closeItem->getContentSize().width/2;
+        float y = origin.y + closeItem->getContentSize().height/2;
+        closeItem->setPosition(Vec2(x,y));
+    }
+
+    auto menu = Menu::create(closeItem, NULL);
+    menu->setPosition(Vec2::ZERO);
+    this->addChild(menu, 1);
+
+    CreateUI(origin, visibleSize);
+    return true;
+}
+
+void SecondScene::menuCloseCallback(Ref* pSender)
+{
+    Director::getInstance()->end();
+}
+

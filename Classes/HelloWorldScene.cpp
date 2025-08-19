@@ -1,18 +1,18 @@
 /****************************************************************************
  Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
- 
+
  http://www.cocos2d-x.org
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in
  all copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,14 +27,16 @@
 #include "cocos/2d/CCMenuItem.h"
 #include "cocos/2d/CCLabel.h"
 #include "CCDirector.h"
+#include "SecondScene.h"
 #include "2d/CCTransition.h"
+
 USING_NS_CC;
 
 using namespace cocos2d::ui;
 
-Scene* HelloWorld::createScene()
+Scene* HelloWorldScene::createScene()
 {
-    return HelloWorld::create();
+    return HelloWorldScene::create();
 }
 
 // Print useful error message instead of segfaulting when files are not there.
@@ -44,7 +46,8 @@ static void problemLoading(const char* filename)
     printf("Depending on how you compiled you might have to add 'Resources/' in front of filenames in HelloWorldScene.cpp\n");
 }
 
-bool HelloWorld::init()
+// on "init" you need to initialize your instance
+bool HelloWorldScene::init()
 {
     if ( !Scene::init() )
     {
@@ -52,12 +55,15 @@ bool HelloWorld::init()
     }
 
     auto visibleSize = Director::getInstance()->getVisibleSize();
+    auto width = visibleSize.width / 2;
+    auto height = visibleSize.height / 2;
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-     auto closeItem = MenuItemImage::create(
+
+    auto closeItem = MenuItemImage::create(
                                            "CloseNormal.png",
                                            "CloseSelected.png",
-                                           CC_CALLBACK_1(HelloWorld::menuCloseCallback, this));
+                                           CC_CALLBACK_1(HelloWorldScene::menuCloseCallback, this));
 
     if (closeItem == nullptr ||
         closeItem->getContentSize().width <= 0 ||
@@ -76,32 +82,44 @@ bool HelloWorld::init()
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
 
-    auto label = Label::createWithTTF("Hello World", "fonts/Marker Felt.ttf", 24);
-    if (label == nullptr)
+    auto go_button = cocos2d::ui::Button::create("Red_button.png", "Red_button.png");
+    go_button->setPosition(visibleSize/2);
+    go_button->setTitleText("Go!");
+    go_button->setTitleFontSize(35);
+    go_button->setTitleAlignment(cocos2d::TextHAlignment::CENTER, cocos2d::TextVAlignment::CENTER);    // to put the title at the center of the button
+    go_button->addTouchEventListener([&](Ref* sender, Widget::TouchEventType type)
+    {
+        if (type == cocos2d::ui::Widget::TouchEventType::ENDED) {
+        // Use pushScene so we can pop back to this exact scene
+        cocos2d::Director::getInstance()->pushScene(
+            cocos2d::TransitionFade::create(0.3f, SecondScene::createScene())
+        );
+    }
+    });
+
+    this->addChild(go_button, 10);
+
+     mLabel = cocos2d::Label::createWithTTF("Let's Start!", "fonts/Marker Felt.ttf", 42);
+    if (mLabel == nullptr)
     {
         problemLoading("'fonts/Marker Felt.ttf'");
     }
     else
     {
-        label->setPosition(Vec2(origin.x + visibleSize.width/2,
-                                origin.y + visibleSize.height - label->getContentSize().height));
+        // position the label on the center of the screen
+        mLabel->setPosition(Vec2(origin.x + visibleSize.width/2,
+                                origin.y + visibleSize.height - mLabel->getContentSize().height*10));
 
-        this->addChild(label, 1);
-    }
-
-    auto sprite = Sprite::create("HelloWorld.png");
-    if (sprite == nullptr)
-    {
-        problemLoading("'HelloWorld.png'");
-    }
-    else
-    {
-        sprite->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
-        this->addChild(sprite, 0);
+        // add the label as a child to this layer
+        this->addChild(mLabel, 1);
     }
     return true;
 }
-void HelloWorld::menuCloseCallback(Ref* pSender)
+
+
+void HelloWorldScene::menuCloseCallback(Ref* pSender)
 {
     Director::getInstance()->end();
 }
+
+
