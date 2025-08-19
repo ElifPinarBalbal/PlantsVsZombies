@@ -29,6 +29,7 @@
 #include "cocos/2d/CCSprite.h"
 #include "cocos/base/CCDirector.h"
 #include  "SecondScene.h"
+#include "Zombies/Zombie.h"
 
 #include "2d/CCActionInstant.h"
 #include "2d/CCActionInterval.h"
@@ -48,12 +49,6 @@ namespace button
     constexpr float BACK_BUTTON_MARGIN_Y       = 20.f;
     constexpr float BACK_BUTTON_RATIO_POS_X    = 0.3f;
     constexpr float BACK_BUTTON_RATIO_POS_Y    = 0.3f;
-}
-
-namespace zombie {
-    constexpr float ZOMBIE_SPEED_PER_SECOND     = 20.f;
-    constexpr float ZOMBIE_STOP_X               = 100.f;
-    constexpr float ZOMBIE_HEALTH_MAX           = 50.f;
 }
 
 namespace grid {
@@ -153,18 +148,6 @@ cocos2d::ui::Button* CreateLeftButton(const cocos2d::Vec2& origin, const cocos2d
     return leftButton;
 }
 
-cocos2d::Sprite* CreateZombieSprite (const cocos2d::Size& visibleSize) {
-    auto* const zombie = cocos2d::Sprite::create("zombie.png");
-    if (!zombie) {
-        problemLoading("zombie.png");
-        return nullptr;
-    }
-
-    zombie->setPosition(650.f, 280.f);
-    zombie->setScale(0.8f);
-    return zombie;
-}
-
 cocos2d::Sprite* CreatePeaShooterSprite (const cocos2d::Size& visibleSize) {
     auto* const peaShooter = cocos2d::Sprite::create("peaShooter.png");
     if (!peaShooter) {
@@ -250,23 +233,7 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
         this->addChild(backButton, 10);
     }
 
-    if (auto* const zombie = CreateZombieSprite(visibleSize)) {
-        mZombieSprite = zombie;
-        this->addChild(zombie, 5);
 
-        // start move left
-        this->schedule([=](float dt) {
-            if (!mZombieSprite) return;
-
-            float x = mZombieSprite->getPositionX();
-            x-= zombie::ZOMBIE_SPEED_PER_SECOND * dt;
-
-            if (x <= zombie::ZOMBIE_STOP_X) {
-                x = zombie::ZOMBIE_STOP_X;
-            }
-            mZombieSprite->setPositionX(x);
-        },"zombie_walk");
-    }
 
     if (auto* const peaShooter = CreatePeaShooterSprite(visibleSize)) {
         mPeaShooterSprite = peaShooter;
@@ -278,7 +245,14 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
         this->addChild(pea, 5);
     }
 
-    if (mPeaShooterSprite && mZombieSprite) {
+    auto* z = Zombie::create();
+    z->setPosition(650.f, 300.f);  // start position
+    z->setSpeed(20.f);
+    z->setStopX(100.f);
+    this->addChild(z, 5);
+    mZombie = z;
+
+    if (mPeaShooterSprite && mZombie) {
         // shoot the zombie with pea periodically
         this->schedule([=](float) {    // starts a timer
             // create pea
@@ -290,7 +264,8 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
             pea->setPosition(startPos);
             this->addChild(pea, 8);
 
-            const cocos2d::Vec2 target(mZombieSprite->getPositionX() - 25.f, startPos.y);  // the target that pea should go - it will go horizontally straight
+            const float zx = mZombie ? mZombie->getPositionX() : startPos.x + 200.f;
+            const cocos2d::Vec2 target(zx- 25.f, startPos.y);
 
             const float speed = 300.0f;
             const float distance = startPos.distance(target);

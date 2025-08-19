@@ -25,12 +25,12 @@
 #ifndef __SECOND_SCENE_H__
 #define __SECOND_SCENE_H__
 
-#include "ui/UIButton.h"
 #include  "cocos/2d/CCNode.h"
 #include  "cocos/2d/CCSprite.h"
 #include  "cocos/2d/CCScene.h"
 #include  "cocos/2d/CCLabel.h"
-
+#include "Zombies/Zombie.h"
+class Zombie;
 class SecondScene : public cocos2d::Scene
 {
     static constexpr int GRID_COLS = 9;
@@ -48,7 +48,7 @@ public:
 
 private:
     cocos2d::Sprite* mTowerSprite = nullptr;
-    cocos2d::Sprite* mZombieSprite = nullptr;
+    Zombie* mZombie = nullptr;
     cocos2d::Sprite* mPeaShooterSprite = nullptr;
     cocos2d::Sprite* mPeaSprite = nullptr;
 
