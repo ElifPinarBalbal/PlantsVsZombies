@@ -184,8 +184,6 @@ Vec2 SecondScene::CellCenter(int col, int row) const
     );
 }
 
-
-
 void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
 {
     if (auto* const backButton = CreateBackButton(origin, visibleSize))
@@ -197,8 +195,6 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
         });
         this->addChild(backButton, zOrders::BACK_BUTTON_Z_ORDER);
     }
-
-
 
     if (auto* const peaShooter = CreatePeaShooterSprite(visibleSize)) {
         mPeaShooterSprite = peaShooter;
@@ -227,17 +223,44 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
             pea->setPosition(startPos);
             this->addChild(pea, zOrders::PEA_Z_ORDER);
 
-            const float zx = mZombie ? mZombie->getPositionX() : startPos.x + 200.f;
-            const cocos2d::Vec2 target(zx- 25.f, startPos.y);
+            const float peaSpeed = 300.0f;
 
-            const float speed = 300.0f;
-            const float distance = startPos.distance(target);
-            float duration = distance / speed;
+            pea->schedule([this, pea, peaSpeed](float dt) {
+                if (!pea->getParent()) return;
 
-            auto move = cocos2d::MoveTo::create(duration, target);
-            auto remove = cocos2d::CallFunc::create([pea]() {pea->removeFromParent();});   // after hiting the zombie, pea will be destroyed
+                pea->setPositionX(pea->getPositionX() + peaSpeed * dt); // move the pea
 
-            pea->runAction(cocos2d::Sequence::create(move, remove, nullptr));
+                // off-screen situations
+                auto* dir    = cocos2d::Director::getInstance();
+                const auto visibleSize     = dir->getVisibleSize();
+                const auto origin = dir->getVisibleOrigin();
+                if (pea->getPositionX() > origin.x + visibleSize.width + 40.f) {
+                    pea->removeFromParent();
+                    return;
+                }
+                // collision situation !
+                if (mZombie && mZombie->getParent()) {
+                    auto peaRect = pea->getBoundingBox();
+                    auto zombieRect = mZombie->getBoundingBox();
+
+                    auto inset = [] (cocos2d::Rect rect, float px, float py) {
+                        rect.origin.x += px; rect.origin.y += py;
+                        rect.size.width -= 2*px;
+                        rect.size.height -= 2*py;
+                        return rect;
+                    };
+
+                    peaRect = inset(peaRect,peaRect.size.width * 0.1f,    peaRect.size.height * 0.30f);
+                    zombieRect = inset(zombieRect, zombieRect.size.width * 0.50f, zombieRect.size.height * 0.20f);
+
+                    if (peaRect.intersectsRect(zombieRect)) {
+                        mZombie->takeDamage(20.f);
+                        cocos2d::log("Zombie HP: %.1f", mZombie->hp());  // It correctly decreases the hp of zombie
+                        pea->removeFromParent();
+                        return;
+                    }
+            }
+            },"pea_step");
         }, 0.8f, "pea_fire_timer");  // per 0.8 seconds
     }
 }

@@ -15,6 +15,7 @@ public:
     void setHP(float hp)            { hp_ = hp; }
     float hp() const                { return hp_; }
     void takeDamage(float dmg)      { hp_ -= dmg; }
+    bool isDead() const             { if (hp_ <= 0.f) return true; }
 
     // movement
     void setSpeed(float s)          {speed_ = s;}
