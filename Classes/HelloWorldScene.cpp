@@ -32,6 +32,44 @@
 
 USING_NS_CC;
 
+#if CC_DEBUG == 0
+
+#endif
+
+namespace
+{
+    void LogUICreationError()
+    {
+#if CC_DEBUG == 1
+        return;
+#endif
+
+        // ...
+    }
+
+    template <typename T, typename... Args>
+    T* CreateCocosObject(Args... args)
+    {
+        auto* ret = T::create(std::forward<Args>(args)...);
+        if (!ret) {
+
+#if CC_DEBUG == 1
+            // problem loading here
+#endif
+
+            return nullptr;
+        }
+
+        return ret;
+    }
+}
+
+namespace zOrders
+{
+    constexpr int MENU_Z_ORDER = 1;
+    constexpr int GO_BUTTON_Z_ORDER = 2;
+    constexpr int MLABEL_Z_ORDER = 1;
+}
 using namespace cocos2d::ui;
 
 Scene* HelloWorldScene::createScene()
@@ -80,7 +118,7 @@ bool HelloWorldScene::init()
 
     auto menu = Menu::create(closeItem, NULL);
     menu->setPosition(Vec2::ZERO);
-    this->addChild(menu, 1);
+    this->addChild(menu, zOrders::MENU_Z_ORDER);
 
     auto go_button = cocos2d::ui::Button::create("Red_button.png", "Red_button.png");
     go_button->setPosition(visibleSize/2);
@@ -97,7 +135,7 @@ bool HelloWorldScene::init()
     }
     });
 
-    this->addChild(go_button, 10);
+    this->addChild(go_button, zOrders::GO_BUTTON_Z_ORDER);
 
      mLabel = cocos2d::Label::createWithTTF("Let's Start!", "fonts/Marker Felt.ttf", 42);
     if (mLabel == nullptr)
@@ -111,7 +149,7 @@ bool HelloWorldScene::init()
                                 origin.y + visibleSize.height - mLabel->getContentSize().height*10));
 
         // add the label as a child to this layer
-        this->addChild(mLabel, 1);
+        this->addChild(mLabel, zOrders::MLABEL_Z_ORDER);
     }
     return true;
 }

@@ -51,7 +51,8 @@ namespace button
     constexpr float BACK_BUTTON_RATIO_POS_Y    = 0.3f;
 }
 
-namespace grid {
+namespace grid
+{
     constexpr float MARGIN_L                    = 185.f;
     constexpr float MARGIN_R                    = 22.f;
     constexpr float MARGIN_B                    = 20.f;
@@ -61,6 +62,16 @@ namespace grid {
     inline float fieldHeight (const cocos2d::Size& vs)  { return vs.height - (MARGIN_T + MARGIN_B); }
 }
 
+namespace zOrders
+{
+    constexpr int TILE_Z_ORDER = 0;
+    constexpr int BACK_BUTTON_Z_ORDER = 10;
+    constexpr int PEASHOOTER_Z_ORDER = 5;
+    constexpr int PEA_Z_ORDER = 8;
+    constexpr int ZOMBIE_Z_ORDER = 5;
+    constexpr int BACKGROUND_Z_ORDER = 0;
+    constexpr int MENU_Z_ORDER = 1;
+}
 Scene* SecondScene::createScene()
 {
     return SecondScene::create();
@@ -202,7 +213,7 @@ void SecondScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
             const float cy = mGridOrigin.y + mCellSize.height * (r + 0.5f);
             tile->setPosition(Vec2(cx, cy));
 
-            this->addChild(tile, 0);           // behind everything
+            this->addChild(tile, zOrders::TILE_Z_ORDER);           // behind everything
             mTiles[r][c] = tile;               // store for later (hover, highlight, etc.)
         }
     }
@@ -230,27 +241,27 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
                 cocos2d::Director::getInstance()->popScene();
             }
         });
-        this->addChild(backButton, 10);
+        this->addChild(backButton, zOrders::BACK_BUTTON_Z_ORDER);
     }
 
 
 
     if (auto* const peaShooter = CreatePeaShooterSprite(visibleSize)) {
         mPeaShooterSprite = peaShooter;
-        this->addChild(peaShooter, 5);
+        this->addChild(peaShooter, zOrders::PEASHOOTER_Z_ORDER);
     }
 
     if (auto* const pea = CreatePeaSprite(visibleSize)) {
         mPeaSprite = pea;
-        this->addChild(pea, 5);
+        this->addChild(pea, zOrders::PEA_Z_ORDER);
     }
 
-    auto* z = Zombie::create();
-    z->setPosition(650.f, 300.f);  // start position
-    z->setSpeed(20.f);
-    z->setStopX(100.f);
-    this->addChild(z, 5);
-    mZombie = z;
+    auto* zombie = Zombie::create();
+    zombie->setPosition(650.f, 300.f);  // start position
+    zombie->setSpeed(20.f);
+    zombie->setStopX(100.f);
+    this->addChild(zombie, zOrders::ZOMBIE_Z_ORDER);
+    mZombie = zombie;
 
     if (mPeaShooterSprite && mZombie) {
         // shoot the zombie with pea periodically
@@ -262,7 +273,7 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
             const cocos2d::Vec2 muzzleOffset(40.f, 20.f);  // to make the pea occur from the "mouth" of the peaShooter
             const cocos2d::Vec2 startPos = mPeaShooterSprite->getPosition() + muzzleOffset;
             pea->setPosition(startPos);
-            this->addChild(pea, 8);
+            this->addChild(pea, zOrders::PEA_Z_ORDER);
 
             const float zx = mZombie ? mZombie->getPositionX() : startPos.x + 200.f;
             const cocos2d::Vec2 target(zx- 25.f, startPos.y);
@@ -276,31 +287,6 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
 
             pea->runAction(cocos2d::Sequence::create(move, remove, nullptr));
         }, 0.8f, "pea_fire_timer");  // per 0.8 seconds
-    }
-
-    if (auto* const rightButton = CreateRightButton(origin, visibleSize))
-    {
-        rightButton->addTouchEventListener([&](cocos2d::Ref*, ui::Widget::TouchEventType t) {
-            if (t == ui::Widget::TouchEventType::ENDED) {
-            }
-
-            else if (t == ui::Widget::TouchEventType::MOVED) {
-            }
-        });
-
-        //this->addChild(rightButton, 10);
-    }
-
-    if (auto* const leftButton = CreateLeftButton(origin, visibleSize))
-    {
-
-        leftButton->addTouchEventListener([&](cocos2d::Ref*, ui::Widget::TouchEventType t) {
-            if (t == ui::Widget::TouchEventType::ENDED) {
-            }
-            else if (t == ui::Widget::TouchEventType::MOVED) {
-            }
-        });
-        //this->addChild(leftButton, 10);
     }
 }
 
@@ -328,7 +314,7 @@ bool SecondScene::init()
         background->setScaleY(scaleY);
 
         // add it at z-order 0 so it stays behind everything else
-        this->addChild(background, 0);
+        this->addChild(background, zOrders::BACKGROUND_Z_ORDER);
 
     }
     BuildGroundGrid(visibleSize, origin);
@@ -353,7 +339,7 @@ bool SecondScene::init()
 
     auto menu = Menu::create(closeItem, NULL);
     menu->setPosition(Vec2::ZERO);
-    this->addChild(menu, 1);
+    this->addChild(menu, zOrders::MENU_Z_ORDER);
 
     CreateUI(origin, visibleSize);
     return true;

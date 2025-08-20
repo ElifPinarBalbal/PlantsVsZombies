@@ -30,6 +30,7 @@
 #include  "cocos/2d/CCScene.h"
 #include  "cocos/2d/CCLabel.h"
 #include "Zombies/Zombie.h"
+
 class Zombie;
 class SecondScene : public cocos2d::Scene
 {

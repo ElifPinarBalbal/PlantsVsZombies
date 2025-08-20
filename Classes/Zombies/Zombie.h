@@ -6,7 +6,6 @@
 #define PLANTSVSZOMBIES_ZOMBIE_H
 #include "2d/CCSprite.h"
 
-
 class Zombie : public cocos2d::Sprite{
 public:
     CREATE_FUNC(Zombie);
