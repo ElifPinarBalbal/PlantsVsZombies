@@ -30,12 +30,14 @@
 #include  "cocos/2d/CCScene.h"
 #include  "cocos/2d/CCLabel.h"
 #include "Zombies/Zombie.h"
+#include <array>
 
 class Zombie;
 class SecondScene : public cocos2d::Scene
 {
     static constexpr int GRID_COLS = 9;
     static constexpr int GRID_ROWS = 5;
+    static constexpr int GRID_SIZE = GRID_COLS * GRID_ROWS;
 public:
     static cocos2d::Scene* createScene();
 
@@ -53,12 +55,26 @@ private:
     cocos2d::Sprite* mPeaShooterSprite = nullptr;
     cocos2d::Sprite* mPeaSprite = nullptr;
 
-    cocos2d::Sprite* mTiles[GRID_ROWS][GRID_COLS] = {};
+    using TileArray = std::array<cocos2d::Sprite*, GRID_SIZE>;
+    TileArray mTiles{};
     cocos2d::Size mCellSize;
     cocos2d::Vec2 mGridOrigin;
 
+    // convert row col index
+    static constexpr  int index(int row, int col)
+    {
+        return row * GRID_COLS + col;
+    }
+
     void BuildGroundGrid(const cocos2d::Size& visibleSize, const cocos2d::Vec2& origin);
     cocos2d::Vec2 CellCenter(int col, int row) const;
+
+    // getter
+    cocos2d::Sprite* tileAt(int row, int col) const
+    {
+        if (row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS) return nullptr;
+        return mTiles[index(row, col)];
+    }
 };
 
 #endif // __SECOND_SCENE_H__

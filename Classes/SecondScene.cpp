@@ -113,52 +113,6 @@ cocos2d::ui::Button* CreateBackButton(const cocos2d::Vec2& origin, const cocos2d
     return backButton;
 }
 
-cocos2d::ui::Button* CreateRightButton(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
-{
-    auto* const rightButton = cocos2d::ui::Button::create("rightButton.png", "rightButton.png");
-    if (!rightButton)
-    {
-        problemLoading("rightButton.png");
-        return nullptr;
-    }
-    rightButton->setScale(0.3f);
-    rightButton->setTitleAlignment(cocos2d::TextHAlignment::CENTER,
-                                  cocos2d::TextVAlignment::CENTER);
-
-    rightButton->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_RIGHT);
-
-    const float marginX = button::BACK_BUTTON_MARGIN_X;;
-    const float marginY = button::BACK_BUTTON_MARGIN_Y;;
-    rightButton->setPosition({
-        origin.x + visibleSize.width  - marginX - 50.f,
-        origin.y +                      marginY + 100.f
-    });
-    return rightButton;
-}
-
-cocos2d::ui::Button* CreateLeftButton(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
-{
-    auto* const leftButton = cocos2d::ui::Button::create("leftButton.png", "leftButton.png");
-    if (!leftButton)
-    {
-        problemLoading("leftButton.png");
-        return nullptr;
-    }
-    leftButton->setScale(0.3f);
-    leftButton->setTitleAlignment(cocos2d::TextHAlignment::CENTER,
-                                  cocos2d::TextVAlignment::CENTER);
-
-    leftButton->setAnchorPoint(cocos2d::Vec2::ANCHOR_BOTTOM_RIGHT);
-
-    const float marginX = button::BACK_BUTTON_MARGIN_X;;
-    const float marginY = button::BACK_BUTTON_MARGIN_Y;;
-    leftButton->setPosition({
-        origin.x + visibleSize.width  - marginX - 150,
-        origin.y +                      marginY + 100
-    });
-    return leftButton;
-}
-
 cocos2d::Sprite* CreatePeaShooterSprite (const cocos2d::Size& visibleSize) {
     auto* const peaShooter = cocos2d::Sprite::create("peaShooter.png");
     if (!peaShooter) {
@@ -193,11 +147,11 @@ void SecondScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
     mCellSize   = Size(fieldW / GRID_COLS, fieldH / GRID_ROWS);
     mGridOrigin = Vec2(origin.x + grid::MARGIN_L, origin.y + grid::MARGIN_B);
 
-    for (int r = 0; r < GRID_ROWS; ++r)
+    for (int row = 0; row < GRID_ROWS; ++row)
     {
-        for (int c = 0; c < GRID_COLS; ++c)
+        for (int col = 0; col < GRID_COLS; ++col)
         {
-            const bool light = ((r + c) % 2 == 0);
+            const bool light = ((row + col) % 2 == 0);
             const char* file = light ? "ground_light.png" : "ground_dark.png";
 
             auto* tile = Sprite::create(file);
@@ -209,12 +163,12 @@ void SecondScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
             tile->setScaleY(mCellSize.height / tex.height);
 
             // center of this cell
-            const float cx = mGridOrigin.x + mCellSize.width  * (c + 0.5f);
-            const float cy = mGridOrigin.y + mCellSize.height * (r + 0.5f);
-            tile->setPosition(Vec2(cx, cy));
+            const float colX = mGridOrigin.x + mCellSize.width  * (col + 0.5f);
+            const float colY = mGridOrigin.y + mCellSize.height * (row + 0.5f);
+            tile->setPosition(Vec2(colX, colY));
 
             this->addChild(tile, zOrders::TILE_Z_ORDER);           // behind everything
-            mTiles[r][c] = tile;               // store for later (hover, highlight, etc.)
+            mTiles[index(row, col)] = tile;              // store for later (hover, highlight, etc.)
         }
     }
 }
