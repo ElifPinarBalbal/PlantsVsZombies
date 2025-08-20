@@ -2,16 +2,16 @@
 // Created by Elif Balbal on 19.08.2025.
 //
 
-#include "Zombie.h"
+#include "ZombieBase.h"
 
-bool Zombie::init() {
-    if (!Sprite::initWithFile("zombie.png")) return false;
-    setScale(0.85f);
+bool ZombieBase::init() {
+    if (!Sprite::initWithFile(spriteFile())) return false;
+    setupDefaults();
     scheduleUpdate();  // we used scheduler to move the zombie periodically
     return true;
 }
 
-void Zombie::update(float dt) {
+void ZombieBase::update(float dt) {
     float x = this->getPositionX();
     x -= dt * speed_;
     if (x <= stopX_) {

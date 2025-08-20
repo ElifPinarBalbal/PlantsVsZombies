@@ -32,36 +32,18 @@
 
 USING_NS_CC;
 
-#if CC_DEBUG == 0
-
-#endif
-
-namespace
+template <typename T, typename... Args>
+T* CreateCocosObj(Args... args)
 {
-    void LogUICreationError()
+    auto* ret = T::create(std::forward<Args>(args)...);
+    if (!ret)
     {
-#if CC_DEBUG == 1
-        return;
+#if COCOS2D_DEBUG == 1
+        CCLOGERROR("Failed to create Cocos2d-x object of type: %s", typeid(T).name());
 #endif
-
-        // ...
+        return nullptr;
     }
-
-    template <typename T, typename... Args>
-    T* CreateCocosObject(Args... args)
-    {
-        auto* ret = T::create(std::forward<Args>(args)...);
-        if (!ret) {
-
-#if CC_DEBUG == 1
-            // problem loading here
-#endif
-
-            return nullptr;
-        }
-
-        return ret;
-    }
+    return ret;
 }
 
 namespace zOrders
@@ -151,6 +133,18 @@ bool HelloWorldScene::init()
         // add the label as a child to this layer
         this->addChild(mLabel, zOrders::MLABEL_Z_ORDER);
     }
+
+    if (auto* pea = CreateCocosObj<cocos2d::Sprite>("pea.png")) {
+        pea->setPosition(100, 120);
+        addChild(pea, 10);
+    }
+
+    // non-working template try
+    /*if (auto* bad = CreateCocosObj<cocos2d::Sprite>("nonexistent.png")) {
+        bad->setPosition(200, 200);
+        addChild(bad);
+    }*/
+
     return true;
 }
 

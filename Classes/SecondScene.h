@@ -29,10 +29,10 @@
 #include  "cocos/2d/CCSprite.h"
 #include  "cocos/2d/CCScene.h"
 #include  "cocos/2d/CCLabel.h"
-#include "Zombies/Zombie.h"
+#include "Zombies/ZombieBase.h"
 #include <array>
 
-class Zombie;
+class ZombieBase;
 class SecondScene : public cocos2d::Scene
 {
     static constexpr int GRID_COLS = 9;
@@ -51,7 +51,7 @@ public:
 
 private:
     cocos2d::Sprite* mTowerSprite = nullptr;
-    Zombie* mZombie = nullptr;
+    ZombieBase* mZombie = nullptr;
     cocos2d::Sprite* mPeaShooterSprite = nullptr;
     cocos2d::Sprite* mPeaSprite = nullptr;
 

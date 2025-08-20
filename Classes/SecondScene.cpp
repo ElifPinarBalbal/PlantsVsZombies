@@ -29,7 +29,7 @@
 #include "cocos/2d/CCSprite.h"
 #include "cocos/base/CCDirector.h"
 #include  "SecondScene.h"
-#include "Zombies/Zombie.h"
+#include "Zombies/ZombieWeak.h"
 
 #include "2d/CCActionInstant.h"
 #include "2d/CCActionInterval.h"
@@ -167,8 +167,8 @@ void SecondScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
             const float colY = mGridOrigin.y + mCellSize.height * (row + 0.5f);
             tile->setPosition(Vec2(colX, colY));
 
-            this->addChild(tile, zOrders::TILE_Z_ORDER);           // behind everything
-            mTiles[index(row, col)] = tile;              // store for later (hover, highlight, etc.)
+            this->addChild(tile, zOrders::TILE_Z_ORDER);            // behind everything
+            mTiles[index(row, col)] = tile;                         // store for later (hover, highlight, etc.)
         }
     }
 }
@@ -190,8 +190,8 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
 {
     if (auto* const backButton = CreateBackButton(origin, visibleSize))
     {
-        backButton->addTouchEventListener([&](cocos2d::Ref*, ui::Widget::TouchEventType t) {
-            if (t == ui::Widget::TouchEventType::ENDED) {
+        backButton->addTouchEventListener([&](cocos2d::Ref*, ui::Widget::TouchEventType touchEventType) {
+            if (touchEventType == ui::Widget::TouchEventType::ENDED) {
                 cocos2d::Director::getInstance()->popScene();
             }
         });
@@ -210,10 +210,8 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
         this->addChild(pea, zOrders::PEA_Z_ORDER);
     }
 
-    auto* zombie = Zombie::create();
+    auto* zombie = ZombieWeak::create();
     zombie->setPosition(650.f, 300.f);  // start position
-    zombie->setSpeed(20.f);
-    zombie->setStopX(100.f);
     this->addChild(zombie, zOrders::ZOMBIE_Z_ORDER);
     mZombie = zombie;
 
