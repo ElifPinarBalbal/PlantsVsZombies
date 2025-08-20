@@ -29,6 +29,10 @@
 #include "cocos/2d/CCSprite.h"
 #include "cocos/base/CCDirector.h"
 #include  "SecondScene.h"
+
+#include "CCEventDispatcher.h"
+#include "CCEventListenerKeyboard.h"
+#include "CCEventListenerMouse.h"
 #include "Zombies/ZombieWeak.h"
 
 #include "2d/CCActionInstant.h"
@@ -71,6 +75,7 @@ namespace zOrders
     constexpr int ZOMBIE_Z_ORDER = 5;
     constexpr int BACKGROUND_Z_ORDER = 0;
     constexpr int MENU_Z_ORDER = 1;
+    constexpr int HOVERED_TILE_Z_ORDER = 50;
 }
 Scene* SecondScene::createScene()
 {
@@ -184,6 +189,78 @@ Vec2 SecondScene::CellCenter(int col, int row) const
     );
 }
 
+void SecondScene::setupGridHover()
+{
+    mHoverRect = cocos2d::DrawNode::create();
+    this->addChild(mHoverRect, zOrders::HOVERED_TILE_Z_ORDER); // above tiles
+
+    auto listener = cocos2d::EventListenerMouse::create();
+    listener->onMouseMove = [this](cocos2d::EventMouse* event)
+    {
+        cocos2d::Vec2 pos = event->getLocationInView();
+        auto vs = cocos2d::Director::getInstance()->getVisibleSize();
+        auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
+
+        // Convert mouse pos into grid col/row
+        float relX = pos.x - mGridOrigin.x;
+        float relY = pos.y - mGridOrigin.y;
+
+        int col = (int)(relX / mCellSize.width);
+        int row = (int)(relY / mCellSize.height);
+
+        if (col < 0 || col >= GRID_COLS || row < 0 || row >= GRID_ROWS)
+        {
+            mHoverRect->clear();
+            return;
+        }
+
+        int idx = index(row, col);
+        if (idx != mHoverIdx)
+        {
+            mHoverIdx = idx;
+            mHoverRect->clear();
+
+            cocos2d::Vec2 center = CellCenter(col, row);
+            float w = mCellSize.width;
+            float h = mCellSize.height;
+
+            cocos2d::Vec2 rect[4] = {
+                {center.x - w/2, center.y - h/2},
+                {center.x + w/2, center.y - h/2},
+                {center.x + w/2, center.y + h/2},
+                {center.x - w/2, center.y + h/2}
+            };
+
+            // whitish semi-transparent highlight
+            cocos2d::Color4F hoverColor(1.f, 1.f, 1.f, 0.35f);
+            mHoverRect->drawSolidPoly(rect, 4, hoverColor);
+        }
+    };
+    listener->onMouseDown = [this](cocos2d::EventMouse* event) {
+        if (event->getMouseButton() != cocos2d::EventMouse::MouseButton::BUTTON_LEFT)
+            return;
+
+        if (mHoverIdx <= 0) return;
+
+        int row = mHoverIdx / GRID_COLS;
+        int col = mHoverIdx % GRID_COLS;
+
+        // To not place 2 peaShooters on the same tile
+        auto existing = tileAt(row, col)->getChildByName("PeaShooter");
+        if (existing) return;
+
+        auto peaShooter = cocos2d::Sprite::create("peaShooter.png");
+        if (!peaShooter) return;
+
+        peaShooter->setScale(0.2f);
+        peaShooter->setPosition(CellCenter(col, row));
+        peaShooter->setName("PeaShooter");
+
+        this->addChild(peaShooter, zOrders::PEASHOOTER_Z_ORDER);
+    };
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+}
+
 void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
 {
     if (auto* const backButton = CreateBackButton(origin, visibleSize))
@@ -290,9 +367,9 @@ bool SecondScene::init()
 
         // add it at z-order 0 so it stays behind everything else
         this->addChild(background, zOrders::BACKGROUND_Z_ORDER);
-
     }
     BuildGroundGrid(visibleSize, origin);
+    setupGridHover();
 
     auto closeItem = MenuItemImage::create(
                                            "CloseNormal.png",

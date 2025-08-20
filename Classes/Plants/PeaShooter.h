@@ -4,11 +4,9 @@
 
 #ifndef PLANTSVSZOMBIES_PEASHOOTER_H
 #define PLANTSVSZOMBIES_PEASHOOTER_H
+#include "PlantBase.h"
 
-
-class PeaShooter
-{
-    public:
+class PeaShooter : public PlantBase {
 
 };
 
