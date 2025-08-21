@@ -21,7 +21,6 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  ****************************************************************************/
-
 #include "HelloWorldScene.h"
 #include "cocos/2d/CCMenu.h"
 #include "cocos/2d/CCMenuItem.h"
@@ -31,11 +30,10 @@
 #include  "SecondScene.h"
 
 #include "CCEventDispatcher.h"
-#include "CCEventListenerKeyboard.h"
 #include "CCEventListenerMouse.h"
 #include "Zombies/ZombieWeak.h"
+#include "Plants/PeaShooter.h"
 
-#include "2d/CCActionInstant.h"
 #include "2d/CCActionInterval.h"
 #include "cocos/2d/CCAnimation.h"
 
@@ -71,7 +69,7 @@ namespace zOrders
     constexpr int TILE_Z_ORDER = 0;
     constexpr int BACK_BUTTON_Z_ORDER = 10;
     constexpr int PEASHOOTER_Z_ORDER = 5;
-    constexpr int PEA_Z_ORDER = 8;
+    //constexpr int PEA_Z_ORDER = 8;
     constexpr int ZOMBIE_Z_ORDER = 5;
     constexpr int BACKGROUND_Z_ORDER = 0;
     constexpr int MENU_Z_ORDER = 1;
@@ -246,17 +244,17 @@ void SecondScene::setupGridHover()
         int col = mHoverIdx % GRID_COLS;
 
         // To not place 2 peaShooters on the same tile
-        auto existing = tileAt(row, col)->getChildByName("PeaShooter");
-        if (existing) return;
+        if (tileAt(row, col)->getChildByName("PeaShooter")) return;
 
-        auto peaShooter = cocos2d::Sprite::create("peaShooter.png");
+        auto* peaShooter = PeaShooter::create();
         if (!peaShooter) return;
 
-        peaShooter->setScale(0.2f);
         peaShooter->setPosition(CellCenter(col, row));
         peaShooter->setName("PeaShooter");
 
         this->addChild(peaShooter, zOrders::PEASHOOTER_Z_ORDER);
+        peaShooter->startAutoFire(mZombie, this, zOrders::PEA_Z_ORDER);
+
     };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 }
