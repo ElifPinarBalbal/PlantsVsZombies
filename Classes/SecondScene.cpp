@@ -84,7 +84,6 @@ Scene* SecondScene::createScene()
 static void problemLoading(const char* filename)
 {
     printf("Error while loading: %s\n", filename);
-    printf("Depending on how you compiled you might have to add 'Resources/' in front of filenames in HelloWorldScene.cpp\n");
 }
 
 // Back Button create function
@@ -147,12 +146,12 @@ void SecondScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
     const float fieldW = grid::fieldWidth(visibleSize);
     const float fieldH = grid::fieldHeight(visibleSize);
 
-    mCellSize   = Size(fieldW / GRID_COLS, fieldH / GRID_ROWS);
+    mCellSize   = Size(fieldW / gridSize::GRID_COLS, fieldH / gridSize::GRID_ROWS);
     mGridOrigin = Vec2(origin.x + grid::MARGIN_L, origin.y + grid::MARGIN_B);
 
-    for (int row = 0; row < GRID_ROWS; ++row)
+    for (int row = 0; row < gridSize::GRID_ROWS; ++row)
     {
-        for (int col = 0; col < GRID_COLS; ++col)
+        for (int col = 0; col < gridSize::GRID_COLS; ++col)
         {
             const bool light = ((row + col) % 2 == 0);
             const char* file = light ? "ground_light.png" : "ground_dark.png";
@@ -171,20 +170,26 @@ void SecondScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
             tile->setPosition(Vec2(colX, colY));
 
             this->addChild(tile, zOrders::TILE_Z_ORDER);            // behind everything
-            mTiles[index(row, col)] = tile;                         // store for later (hover, highlight, etc.)
+            mTiles[index(row, col)] = tile;
         }
     }
 }
 
-// this function coverts the grid coordinate into actual pixel positions
+// this function converts the grid coordinate into actual pixel positions
 Vec2 SecondScene::CellCenter(int col, int row) const
 {
-    col = max(0, min(GRID_COLS - 1, col));
-    row = max(0, min(GRID_ROWS - 1, row));
+    col = max(0, min(gridSize::GRID_COLS - 1, col));
+    row = max(0, min(gridSize::GRID_ROWS - 1, row));
     return Vec2(
         mGridOrigin.x + mCellSize.width  * (col + 0.5f),
         mGridOrigin.y + mCellSize.height * (row + 0.5f)
     );
+}
+
+cocos2d::Sprite* SecondScene::checkTileAt(int row, int col) const
+{
+    if (row < 0 || row >= gridSize::GRID_ROWS || col < 0 || col >= gridSize::GRID_COLS) return nullptr;
+    return mTiles.at(index(row, col));
 }
 
 void SecondScene::setupGridHover()
@@ -206,7 +211,7 @@ void SecondScene::setupGridHover()
         int col = (int)(relX / mCellSize.width);
         int row = (int)(relY / mCellSize.height);
 
-        if (col < 0 || col >= GRID_COLS || row < 0 || row >= GRID_ROWS)
+        if (col < 0 || col >= gridSize::GRID_COLS || row < 0 || row >= gridSize::GRID_ROWS)
         {
             mHoverRect->clear();
             return;
@@ -240,11 +245,15 @@ void SecondScene::setupGridHover()
 
         if (mHoverIdx <= 0) return;
 
-        int row = mHoverIdx / GRID_COLS;
-        int col = mHoverIdx % GRID_COLS;
+        int row = mHoverIdx / gridSize::GRID_COLS;
+        int col = mHoverIdx % gridSize::GRID_COLS;
 
         // To not place 2 peaShooters on the same tile
-        if (tileAt(row, col)->getChildByName("PeaShooter")) return;
+        if (cellOccupied(row, col))
+        {
+            log("Burası dolu !");
+            return;
+        }
 
         auto* peaShooter = PeaShooter::create();
         if (!peaShooter) return;
@@ -253,8 +262,8 @@ void SecondScene::setupGridHover()
         peaShooter->setName("PeaShooter");
 
         this->addChild(peaShooter, zOrders::PEASHOOTER_Z_ORDER);
+        markCell(row, col, peaShooter);
         peaShooter->startAutoFire(mZombie, this, zOrders::PEA_Z_ORDER);
-
     };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 }
@@ -269,11 +278,6 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
             }
         });
         this->addChild(backButton, zOrders::BACK_BUTTON_Z_ORDER);
-    }
-
-    if (auto* const peaShooter = CreatePeaShooterSprite(visibleSize)) {
-        mPeaShooterSprite = peaShooter;
-        this->addChild(peaShooter, zOrders::PEASHOOTER_Z_ORDER);
     }
 
     if (auto* const pea = CreatePeaSprite(visibleSize)) {
@@ -340,7 +344,6 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
     }
 }
 
-// on "init" you need to initialize your instance
 bool SecondScene::init()
 {
     if ( !Scene::init() )
@@ -363,7 +366,6 @@ bool SecondScene::init()
         background->setScaleX(scaleX);
         background->setScaleY(scaleY);
 
-        // add it at z-order 0 so it stays behind everything else
         this->addChild(background, zOrders::BACKGROUND_Z_ORDER);
     }
     BuildGroundGrid(visibleSize, origin);
