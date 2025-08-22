@@ -47,13 +47,14 @@ public:
 
     CREATE_FUNC(SecondScene);
 
-
-
 private:
     cocos2d::Sprite* mTowerSprite = nullptr;
     ZombieBase* mZombie = nullptr;
     cocos2d::Sprite* mPeaShooterSprite = nullptr;
     cocos2d::Sprite* mPeaSprite = nullptr;
+
+    int mHoverIdx = -1;
+    cocos2d::DrawNode* mHoverRect = nullptr;
 
     using TileArray = std::array<cocos2d::Sprite*, GRID_SIZE>;
     TileArray mTiles{};
@@ -75,6 +76,8 @@ private:
         if (row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS) return nullptr;
         return mTiles[index(row, col)];
     }
+
+    void setupGridHover();
 };
 
 #endif // __SECOND_SCENE_H__
