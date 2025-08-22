@@ -1,5 +1,5 @@
 /****************************************************************************
-Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
+ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 
  http://www.cocos2d-x.org
 
@@ -22,29 +22,59 @@ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
  THE SOFTWARE.
  ****************************************************************************/
 
-#ifndef __HELLOWORLD_SCENE_H__
-#define __HELLOWORLD_SCENE_H__
+#ifndef __SECOND_SCENE_H__
+#define __SECOND_SCENE_H__
 
-#include "ui/UIButton.h"
 #include  "cocos/2d/CCNode.h"
 #include  "cocos/2d/CCSprite.h"
 #include  "cocos/2d/CCScene.h"
 #include  "cocos/2d/CCLabel.h"
+#include "Zombies/ZombieBase.h"
+#include <array>
 
-class HelloWorldScene : public cocos2d::Scene
+class ZombieBase;
+class SecondScene : public cocos2d::Scene
 {
+    static constexpr int GRID_COLS = 9;
+    static constexpr int GRID_ROWS = 5;
+    static constexpr int GRID_SIZE = GRID_COLS * GRID_ROWS;
 public:
     static cocos2d::Scene* createScene();
 
     virtual bool init();
-    // a selector callback
     void menuCloseCallback(cocos2d::Ref* pSender);
+    void CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize);
 
-    // implement the "static create()" method manually
-    CREATE_FUNC(HelloWorldScene);
+    CREATE_FUNC(SecondScene);
+
+
+
 private:
-    cocos2d::Label* mLabel = nullptr;
+    cocos2d::Sprite* mTowerSprite = nullptr;
+    ZombieBase* mZombie = nullptr;
+    cocos2d::Sprite* mPeaShooterSprite = nullptr;
+    cocos2d::Sprite* mPeaSprite = nullptr;
 
+    using TileArray = std::array<cocos2d::Sprite*, GRID_SIZE>;
+    TileArray mTiles{};
+    cocos2d::Size mCellSize;
+    cocos2d::Vec2 mGridOrigin;
+
+    // convert row col index
+    static constexpr  int index(int row, int col)
+    {
+        return row * GRID_COLS + col;
+    }
+
+    void BuildGroundGrid(const cocos2d::Size& visibleSize, const cocos2d::Vec2& origin);
+    cocos2d::Vec2 CellCenter(int col, int row) const;
+
+    // getter
+    cocos2d::Sprite* tileAt(int row, int col) const
+    {
+        if (row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS) return nullptr;
+        return mTiles[index(row, col)];
+    }
 };
 
-#endif // __HELLOWORLD_SCENE_H__
+#endif // __SECOND_SCENE_H__
