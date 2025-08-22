@@ -3,3 +3,10 @@
 //
 
 #include "PlantBase.h"
+
+bool PlantBase::init()
+{
+    if (!Sprite::initWithFile(spriteFile())) return false;
+    setupDefaults();
+    return true;
+}
