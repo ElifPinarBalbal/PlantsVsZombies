@@ -31,7 +31,7 @@ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 #include  "cocos/2d/CCScene.h"
 #include  "cocos/2d/CCLabel.h"
 
-class HelloWorldScene : public cocos2d::Scene
+class SplashScene : public cocos2d::Scene
 {
 public:
     static cocos2d::Scene* createScene();
@@ -41,7 +41,7 @@ public:
     void menuCloseCallback(cocos2d::Ref* pSender);
 
     // implement the "static create()" method manually
-    CREATE_FUNC(HelloWorldScene);
+    CREATE_FUNC(SplashScene);
 private:
     cocos2d::Label* mLabel = nullptr;
 

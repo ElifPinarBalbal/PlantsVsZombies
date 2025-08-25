@@ -28,16 +28,18 @@
 #include  "cocos/2d/CCNode.h"
 #include  "cocos/2d/CCSprite.h"
 #include  "cocos/2d/CCScene.h"
-#include  "cocos/2d/CCLabel.h"
 #include "Zombies/ZombieBase.h"
 #include <array>
+#include  "Plants/PlantBase.h"
 
-class ZombieBase;
-class SecondScene : public cocos2d::Scene
-{
+namespace gridSize {
     static constexpr int GRID_COLS = 9;
     static constexpr int GRID_ROWS = 5;
     static constexpr int GRID_SIZE = GRID_COLS * GRID_ROWS;
+}
+class ZombieBase;
+class GameScene : public cocos2d::Scene
+{
 public:
     static cocos2d::Scene* createScene();
 
@@ -45,7 +47,7 @@ public:
     void menuCloseCallback(cocos2d::Ref* pSender);
     void CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize);
 
-    CREATE_FUNC(SecondScene);
+    CREATE_FUNC(GameScene);
 
 private:
     cocos2d::Sprite* mTowerSprite = nullptr;
@@ -56,28 +58,31 @@ private:
     int mHoverIdx = -1;
     cocos2d::DrawNode* mHoverRect = nullptr;
 
-    using TileArray = std::array<cocos2d::Sprite*, GRID_SIZE>;
+    using TileArray = std::array<cocos2d::Sprite*, gridSize::GRID_SIZE>;
     TileArray mTiles{};
     cocos2d::Size mCellSize;
     cocos2d::Vec2 mGridOrigin;
+    std::array<PlantBase*, gridSize::GRID_SIZE> mPlants{};   // nullptr = empty
+
 
     // convert row col index
     static constexpr  int index(int row, int col)
     {
-        return row * GRID_COLS + col;
+        return row * gridSize::GRID_COLS + col;
     }
 
     void BuildGroundGrid(const cocos2d::Size& visibleSize, const cocos2d::Vec2& origin);
     cocos2d::Vec2 CellCenter(int col, int row) const;
-
-    // getter
-    cocos2d::Sprite* tileAt(int row, int col) const
-    {
-        if (row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS) return nullptr;
-        return mTiles[index(row, col)];
-    }
+    cocos2d::Sprite* checkTileAt(int row, int col) const;
 
     void setupGridHover();
+
+    bool cellOccupied(int row, int col) const {
+        return mPlants[index(row, col)] != nullptr;
+    }
+    void markCell(int row, int col, PlantBase* p) {
+        mPlants[index(row, col)] = p;
+    }
 };
 
 #endif // __SECOND_SCENE_H__

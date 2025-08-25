@@ -22,12 +22,12 @@
  THE SOFTWARE.
  ****************************************************************************/
 
-#include "HelloWorldScene.h"
+#include "SplashScene.h"
 #include "cocos/2d/CCMenu.h"
 #include "cocos/2d/CCMenuItem.h"
 #include "cocos/2d/CCLabel.h"
 #include "CCDirector.h"
-#include "SecondScene.h"
+#include "GameScene.h"
 #include "2d/CCTransition.h"
 
 USING_NS_CC;
@@ -54,9 +54,9 @@ namespace zOrders
 }
 using namespace cocos2d::ui;
 
-Scene* HelloWorldScene::createScene()
+Scene* SplashScene::createScene()
 {
-    return HelloWorldScene::create();
+    return SplashScene::create();
 }
 
 // Print useful error message instead of segfaulting when files are not there.
@@ -67,7 +67,7 @@ static void problemLoading(const char* filename)
 }
 
 // on "init" you need to initialize your instance
-bool HelloWorldScene::init()
+bool SplashScene::init()
 {
     if ( !Scene::init() )
     {
@@ -83,7 +83,7 @@ bool HelloWorldScene::init()
     auto closeItem = MenuItemImage::create(
                                            "CloseNormal.png",
                                            "CloseSelected.png",
-                                           CC_CALLBACK_1(HelloWorldScene::menuCloseCallback, this));
+                                           CC_CALLBACK_1(SplashScene::menuCloseCallback, this));
 
     if (closeItem == nullptr ||
         closeItem->getContentSize().width <= 0 ||
@@ -112,7 +112,7 @@ bool HelloWorldScene::init()
         if (type == cocos2d::ui::Widget::TouchEventType::ENDED) {
         // Use pushScene so we can pop back to this exact scene
         cocos2d::Director::getInstance()->pushScene(
-            cocos2d::TransitionFade::create(0.3f, SecondScene::createScene())
+            cocos2d::TransitionFade::create(0.3f, GameScene::createScene())
         );
     }
     });
@@ -149,7 +149,7 @@ bool HelloWorldScene::init()
 }
 
 
-void HelloWorldScene::menuCloseCallback(Ref* pSender)
+void SplashScene::menuCloseCallback(Ref* pSender)
 {
     Director::getInstance()->end();
 }

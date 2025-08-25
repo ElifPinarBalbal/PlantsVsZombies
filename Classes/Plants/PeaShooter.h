@@ -4,10 +4,19 @@
 
 #ifndef PLANTSVSZOMBIES_PEASHOOTER_H
 #define PLANTSVSZOMBIES_PEASHOOTER_H
+
 #include "PlantBase.h"
 
 class PeaShooter : public PlantBase {
+public:
+    CREATE_FUNC(PeaShooter);
+    void startAutoFire(class ZombieBase* target, cocos2d::Node* world, int pea_Z_Order = zOrders::PEA_Z_ORDER);
 
+protected:
+    const char* getImagePath() const override { return "peaShooter.png"; };
+    void setupDefaults() override {
+        setScale(0.2f);
+    }
 };
 
 #endif //PLANTSVSZOMBIES_PEASHOOTER_H
