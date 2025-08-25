@@ -15,10 +15,9 @@ void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, i
     if (!world) world = this->getParent();
     if (!world) return;
 
+    if (!target || !target->getParent()) return;   // if no zombie, then no shoot
     // fire pea every 0.8 seconds
     this->schedule([this, target, world, pea_Z_Order](float) {
-        if (!target || !target->getParent()) return;   // if no zombie, then no shoot
-
         // create pea - there is zombie :)
         auto* pea = Pea::create();
         if (!pea) return;

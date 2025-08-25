@@ -36,7 +36,6 @@ static cocos2d::Rect rectInWorld(const cocos2d::Node* n)
     return {{minx, miny}, {maxx - minx, maxy - miny}};
 }
 
-
 void ProjectileBase::startShootingProjectile() {
     this->schedule([this] (float dt) {
         if (!this->getParent()) return;
