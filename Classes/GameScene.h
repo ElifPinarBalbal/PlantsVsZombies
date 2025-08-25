@@ -38,7 +38,7 @@ namespace gridSize {
     static constexpr int GRID_SIZE = GRID_COLS * GRID_ROWS;
 }
 class ZombieBase;
-class SecondScene : public cocos2d::Scene
+class GameScene : public cocos2d::Scene
 {
 public:
     static cocos2d::Scene* createScene();
@@ -47,7 +47,7 @@ public:
     void menuCloseCallback(cocos2d::Ref* pSender);
     void CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize);
 
-    CREATE_FUNC(SecondScene);
+    CREATE_FUNC(GameScene);
 
 private:
     cocos2d::Sprite* mTowerSprite = nullptr;

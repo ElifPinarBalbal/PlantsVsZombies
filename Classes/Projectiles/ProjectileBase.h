@@ -18,22 +18,22 @@ public:
     void giveDamage(float d) { damage_ = d; }
     void setTarget(ZombieBase* z) { target_ = z; }
 
-    void start();  // begin updates
+    void startShootingProjectile();
 
 protected:  // can be overriden by subclasses-only
     virtual const char* spriteFile() const { return "pea.png"; } // default image
     virtual void setupDefaults() {
         setScale(1.f);
     }
-    virtual void onHit(ZombieBase* z);
+    virtual void onProjectileHitZombie(ZombieBase* z);
 
 private:
     cocos2d::Vec2 velocity_         {   300.f, 0.f  };
     float damage_                   {   20.f    };
     ZombieBase* target_             {   nullptr };
 
-    bool outOfBounds() const;
-    bool hitsTarget() const;
+    bool IsPeaOutOfBounds() const;
+    bool IsHittingTarget() const;
 
 };
 

@@ -14,10 +14,9 @@ class PlantBase : public cocos2d::Sprite{
 public:
     CREATE_FUNC(PlantBase);
     bool init() override;
-    void startAutoFire(class ZombieBase* target, cocos2d::Node* world, int pea_Z_Order = zOrders::PEA_Z_ORDER);
 
 protected:
-    virtual const char* spriteFile() const { return "peaShooter.png"; } // default image
+    virtual const char* getImagePath() const { return "peaShooter.png"; } // default image
     virtual void setupDefaults() {
         setScale(0.2f);
     }

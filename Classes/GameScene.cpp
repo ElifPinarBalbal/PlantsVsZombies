@@ -21,13 +21,13 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  ****************************************************************************/
-#include "HelloWorldScene.h"
+#include "SplashScene.h"
 #include "cocos/2d/CCMenu.h"
 #include "cocos/2d/CCMenuItem.h"
 #include "cocos/2d/CCLabel.h"
 #include "cocos/2d/CCSprite.h"
 #include "cocos/base/CCDirector.h"
-#include  "SecondScene.h"
+#include  "GameScene.h"
 
 #include "CCEventDispatcher.h"
 #include "CCEventListenerMouse.h"
@@ -75,9 +75,9 @@ namespace zOrders
     constexpr int MENU_Z_ORDER = 1;
     constexpr int HOVERED_TILE_Z_ORDER = 50;
 }
-Scene* SecondScene::createScene()
+Scene* GameScene::createScene()
 {
-    return SecondScene::create();
+    return GameScene::create();
 }
 
 // Print useful error message instead of segfault when files are not there.
@@ -141,7 +141,7 @@ cocos2d::Sprite* CreatePeaSprite (const cocos2d::Size& visibleSize) {
 }
 
 // Grid Layout
-void SecondScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
+void GameScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
 {
     const float fieldW = grid::fieldWidth(visibleSize);
     const float fieldH = grid::fieldHeight(visibleSize);
@@ -176,7 +176,7 @@ void SecondScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
 }
 
 // this function converts the grid coordinate into actual pixel positions
-Vec2 SecondScene::CellCenter(int col, int row) const
+Vec2 GameScene::CellCenter(int col, int row) const
 {
     col = max(0, min(gridSize::GRID_COLS - 1, col));
     row = max(0, min(gridSize::GRID_ROWS - 1, row));
@@ -186,13 +186,13 @@ Vec2 SecondScene::CellCenter(int col, int row) const
     );
 }
 
-cocos2d::Sprite* SecondScene::checkTileAt(int row, int col) const
+cocos2d::Sprite* GameScene::checkTileAt(int row, int col) const
 {
     if (row < 0 || row >= gridSize::GRID_ROWS || col < 0 || col >= gridSize::GRID_COLS) return nullptr;
     return mTiles.at(index(row, col));
 }
 
-void SecondScene::setupGridHover()
+void GameScene::setupGridHover()
 {
     mHoverRect = cocos2d::DrawNode::create();
     this->addChild(mHoverRect, zOrders::HOVERED_TILE_Z_ORDER); // above tiles
@@ -243,7 +243,7 @@ void SecondScene::setupGridHover()
         if (event->getMouseButton() != cocos2d::EventMouse::MouseButton::BUTTON_LEFT)
             return;
 
-        if (mHoverIdx <= 0) return;
+        if (mHoverIdx < 0) return;
 
         int row = mHoverIdx / gridSize::GRID_COLS;
         int col = mHoverIdx % gridSize::GRID_COLS;
@@ -268,7 +268,7 @@ void SecondScene::setupGridHover()
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 }
 
-void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
+void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
 {
     if (auto* const backButton = CreateBackButton(origin, visibleSize))
     {
@@ -344,7 +344,7 @@ void SecondScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& vis
     }
 }
 
-bool SecondScene::init()
+bool GameScene::init()
 {
     if ( !Scene::init() )
     {
@@ -374,7 +374,7 @@ bool SecondScene::init()
     auto closeItem = MenuItemImage::create(
                                            "CloseNormal.png",
                                            "CloseSelected.png",
-                                           CC_CALLBACK_1(SecondScene::menuCloseCallback, this));
+                                           CC_CALLBACK_1(GameScene::menuCloseCallback, this));
 
     if (closeItem == nullptr ||
         closeItem->getContentSize().width <= 0 ||
@@ -397,7 +397,7 @@ bool SecondScene::init()
     return true;
 }
 
-void SecondScene::menuCloseCallback(Ref* pSender)
+void GameScene::menuCloseCallback(Ref* pSender)
 {
     Director::getInstance()->end();
 }
