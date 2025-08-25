@@ -262,7 +262,7 @@ void GameScene::setupGridHover()
 
         this->addChild(peaShooter, zOrders::PEASHOOTER_Z_ORDER);
         markCell(row, col, peaShooter);
-        if (mZombie && isInTheSameRow(peaShooter, mZombie)) {
+        if (mZombie && isInTheSameRowAndFront(peaShooter, mZombie)) {
             peaShooter->startAutoFire(mZombie, this, zOrders::PEA_Z_ORDER);
         } else {
             CCLOG("Shooter placed; no zombie in this row (not firing).");
@@ -282,6 +282,16 @@ int GameScene::whichRowFromY (float positionY) const
 bool GameScene::isInTheSameRow(cocos2d::Node* nodeA, cocos2d::Node* nodeB) const
 {
     return (whichRowFromY(nodeA->getPositionY()) == whichRowFromY(nodeB->getPositionY()));
+}
+
+bool GameScene::isInTheSameRowAndFront(cocos2d::Node *plant, cocos2d::Node *zombie) const
+{
+    if (isInTheSameRow(plant, zombie))
+        {
+        if (plant->getPositionX() <= zombie->getPositionX()) {
+            return true;
+        }
+    }
 }
 
 void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
