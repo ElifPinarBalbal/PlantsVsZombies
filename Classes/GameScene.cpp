@@ -115,31 +115,6 @@ cocos2d::ui::Button* CreateBackButton(const cocos2d::Vec2& origin, const cocos2d
     return backButton;
 }
 
-cocos2d::Sprite* CreatePeaShooterSprite (const cocos2d::Size& visibleSize) {
-    auto* const peaShooter = cocos2d::Sprite::create("peaShooter.png");
-    if (!peaShooter) {
-        problemLoading("peaShooter.png");
-        return nullptr;
-    }
-
-    peaShooter->setPosition({
-        210.f, 270.f
-    });
-    peaShooter->setScale(0.2f);
-    return peaShooter;
-}
-
-cocos2d::Sprite* CreatePeaSprite (const cocos2d::Size& visibleSize) {
-    auto* const pea = cocos2d::Sprite::create("pea.png");
-    if (!pea) {
-        problemLoading("pea.png");
-        return nullptr;
-    }
-
-    pea->setScale(1.0f);
-    return pea;
-}
-
 // Grid Layout
 void GameScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
 {
@@ -291,7 +266,9 @@ bool GameScene::isInTheSameRowAndFront(cocos2d::Node *plant, cocos2d::Node *zomb
         if (plant->getPositionX() <= zombie->getPositionX()) {
             return true;
         }
+        return false;
     }
+    return false;
 }
 
 void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
@@ -304,11 +281,6 @@ void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visib
             }
         });
         this->addChild(backButton, zOrders::BACK_BUTTON_Z_ORDER);
-    }
-
-    if (auto* const pea = CreatePeaSprite(visibleSize)) {
-        mPeaSprite = pea;
-        this->addChild(pea, zOrders::PEA_Z_ORDER);
     }
 
     auto* zombie = ZombieWeak::create();
