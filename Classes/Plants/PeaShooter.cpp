@@ -31,3 +31,5 @@ void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, i
         pea->startShootingProjectile();
        }, intervals::SHOOT_INTERVAL_SECONDS, "auto_fire_timer");
 }
+
+// shooting only in the same row logic will be added
