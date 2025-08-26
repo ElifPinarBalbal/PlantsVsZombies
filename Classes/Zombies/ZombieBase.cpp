@@ -39,7 +39,7 @@ void ZombieBase::takeDamage(float dmg)
 {
     if (isDead()) return;
     hp_ -= dmg;
-    cocos2d::log("Zombie HP: %.1f", hp_);
+    //cocos2d::log("Zombie HP: %.1f", hp_);
     if (hp_ <= 0.f) zombieDie();
 }
 
