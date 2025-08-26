@@ -31,6 +31,7 @@
 #include "Zombies/ZombieBase.h"
 #include <array>
 #include  "Plants/PlantBase.h"
+#include "Controllers/ZombieController.h"
 
 namespace gridSize {
     static constexpr int GRID_COLS = 9;
@@ -50,10 +51,8 @@ public:
     CREATE_FUNC(GameScene);
 
 private:
-    cocos2d::Sprite* mTowerSprite = nullptr;
-    ZombieBase* mZombie = nullptr;
-    cocos2d::Sprite* mPeaShooterSprite = nullptr;
-    cocos2d::Sprite* mPeaSprite = nullptr;
+    ZombieController* zombieController_ = nullptr;
+
 
     int mHoverIdx = -1;
     cocos2d::DrawNode* mHoverRect = nullptr;

@@ -68,7 +68,7 @@ static cocos2d::Rect addInsetToBoundingBoxes(cocos2d::Rect r, float px, float py
 
 // calculates collision using worldPositions
 bool ProjectileBase::IsHittingTarget() const {
-    if (!target_ || !target_->getParent()) return false;
+    if (!target_ || !target_->getParent() || target_->isDead()) return false;
 
     auto peaRect = rectInWorld(this);
     auto targetRect = rectInWorld(target_);
@@ -87,7 +87,6 @@ bool ProjectileBase::IsHittingTarget() const {
 void ProjectileBase::onProjectileHitZombie(ZombieBase* zombie) {
     if (zombie) {
         zombie->takeDamage(damage_);
-        cocos2d::log("Zombie HP: %.1f", zombie->hp());
     }
     this->removeFromParent();
 }

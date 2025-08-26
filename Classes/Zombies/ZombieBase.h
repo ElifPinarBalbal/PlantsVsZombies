@@ -4,6 +4,8 @@
 
 #ifndef PLANTSVSZOMBIES_ZOMBIE_H
 #define PLANTSVSZOMBIES_ZOMBIE_H
+#include <utility>
+
 #include "2d/CCSprite.h"
 
 class ZombieBase : public cocos2d::Sprite{
@@ -14,14 +16,20 @@ public:
     void update(float dt) override;
     void setHP(float hp)            { hp_ = hp; }
     float hp() const                { return hp_; }
-    void takeDamage(float dmg)      { hp_ -= dmg; }
+    void takeDamage(float dmg);
+    bool isDead()                   {return dead_;}
+    void zombieDie();
+
+    // death callback that invokes at the end
+    using DeathCallback = std::function<void(ZombieBase*)>;
+    void setOnDeath(DeathCallback callback) {onDeath_ = std::move(callback);}
 
     // movement
     void setSpeed(float s)          {speed_ = s;}
     void setStopX(float x)          {stopX_ = x;}
 
-protected:  // can be overriden by subclasses-only
-    virtual const char* spriteFile() const { return "zombie.png"; } // default image
+protected:
+    virtual const char* getImagePath() const { return "zombie.png"; }
     virtual void setupDefaults() {
         hp_    = 50.f;
         speed_ = 20.f;
@@ -29,11 +37,13 @@ protected:  // can be overriden by subclasses-only
         setScale(0.85f);
     }
 
-    float hp_ =     50.f;
-    float speed_ =  20.f;
-    float stopX_ =  100.f;
+    float maxHp_    =   100.f;
+    float hp_       =   100.f;
+    float speed_    =   20.f;
+    float stopX_    =   100.f;
+    bool dead_      =   false;
 
+    DeathCallback onDeath_{nullptr};
 };
-
 
 #endif //PLANTSVSZOMBIES_ZOMBIE_H

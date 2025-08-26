@@ -237,11 +237,14 @@ void GameScene::setupGridHover()
 
         this->addChild(peaShooter, zOrders::PEASHOOTER_Z_ORDER);
         markCell(row, col, peaShooter);
-        if (mZombie && isInTheSameRowAndFront(peaShooter, mZombie)) {
-            peaShooter->startAutoFire(mZombie, this, zOrders::PEA_Z_ORDER);
-        } else {
-            CCLOG("Shooter placed; no zombie in this row (not firing).");
-        }    };
+
+        for (auto* zombie : zombieController_->getZombies()) {
+            if (isInTheSameRowAndFront(peaShooter, zombie)) {
+                peaShooter->startAutoFire(zombie, this, zOrders::PEA_Z_ORDER);
+                break;
+            }
+        }
+    };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 }
 
@@ -283,10 +286,16 @@ void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visib
         this->addChild(backButton, zOrders::BACK_BUTTON_Z_ORDER);
     }
 
-    auto* zombie = ZombieWeak::create();
-    zombie->setPosition(650.f, 300.f);  // start position
-    this->addChild(zombie, zOrders::ZOMBIE_Z_ORDER);
-    mZombie = zombie;
+    zombieController_ = ZombieController::create();
+    this->addChild(zombieController_, zOrders::ZOMBIE_Z_ORDER);
+
+    int numOfZombies = 5;
+    zombieController_->spawnZombies(
+        numOfZombies,
+        Director::getInstance()->getVisibleSize().width,
+        mCellSize.height,
+        gridSize::GRID_ROWS
+    );
 }
 
 bool GameScene::init()

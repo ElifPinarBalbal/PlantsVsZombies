@@ -21,7 +21,7 @@ void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, i
     // fire pea every 0.8 seconds
     this->schedule([this, target, world, pea_Z_Order](float) {
 
-        if (!this->getParent() || !target || !target->getParent()) {
+        if (!this->getParent() || !target || !target->getParent() || target->isDead() ) {
             this->unschedule("auto_fire_timer");
             return;
         }
