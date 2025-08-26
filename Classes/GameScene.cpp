@@ -249,8 +249,7 @@ void GameScene::setupGridHover()
 int GameScene::whichRowFromY (float positionY) const
 {
     int row = static_cast<int>((positionY - mGridOrigin.y) / mCellSize.height);
-    if (row < 0) row = 0;
-    if (row >= gridSize::GRID_ROWS) row = gridSize::GRID_ROWS - 1;
+    if (row < 0 || row >= gridSize::GRID_ROWS) return -1;
     return row;
 }
 
