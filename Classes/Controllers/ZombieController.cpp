@@ -7,6 +7,12 @@
 #include "Zombies/ZombieBase.h"
 #include "Zombies/ZombieWeak.h"
 
+namespace spawnConstants
+{
+    constexpr float X_POS_OFFSET = 50.f;
+    constexpr float Y_POS_OFFSET = 20.f;
+}
+
 bool ZombieController::init() {
     return true;
 }
@@ -16,8 +22,8 @@ void ZombieController::spawnZombies(int countOfZombies, float sceneWidth, float 
         auto * zombie = ZombieWeak::create();
         int row = rand() % numOfRows;           // randomly select the row to come
 
-        float xPos = sceneWidth + 50.f;
-        float yPos = tileHeight * row + tileHeight - 20.f;
+        float xPos = sceneWidth + spawnConstants::X_POS_OFFSET;
+        float yPos = tileHeight * row + tileHeight - spawnConstants::Y_POS_OFFSET;
 
         zombie->setPosition({xPos, yPos});
         this->addChild(zombie);

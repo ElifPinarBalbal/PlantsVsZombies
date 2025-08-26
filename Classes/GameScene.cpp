@@ -240,8 +240,10 @@ void GameScene::setupGridHover()
 
         for (auto* zombie : zombieController_->getZombies()) {
             if (isInTheSameRowAndFront(peaShooter, zombie)) {
-                peaShooter->startAutoFire(zombie, this, zOrders::PEA_Z_ORDER);
-                break;
+                if (whichRowFromY(zombie->getPositionY()) != -1){
+                    peaShooter->startAutoFire(zombie, this, zOrders::PEA_Z_ORDER);
+                    break;
+                }
             }
         }
     };
@@ -252,8 +254,7 @@ void GameScene::setupGridHover()
 int GameScene::whichRowFromY (float positionY) const
 {
     int row = static_cast<int>((positionY - mGridOrigin.y) / mCellSize.height);
-    if (row < 0) row = 0;
-    if (row >= gridSize::GRID_ROWS) row = gridSize::GRID_ROWS - 1;
+    if (row < 0 || row >= gridSize::GRID_ROWS) return -1;
     return row;
 }
 
