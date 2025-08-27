@@ -16,7 +16,7 @@ protected:
         hp_    = 100.f;
         speed_ = 20.f;
         stopX_ = 100.f;
-        setScale(0.85f);
+        setScale(0.75f);
     }
 
 };

@@ -19,7 +19,7 @@ public:
 protected:
     const char* spriteFile() const override { return "pea.png"; }
     void setupDefaults() override {
-        setScale(1.0f);
+        setScale(0.9f);
     }
 };
 

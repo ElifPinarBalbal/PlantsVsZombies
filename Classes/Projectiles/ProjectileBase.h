@@ -21,9 +21,9 @@ public:
     void startShootingProjectile();
 
 protected:  // can be overriden by subclasses-only
-    virtual const char* spriteFile() const { return "pea.png"; } // default image
+    virtual const char* spriteFile() const { return "pea.png"; } 
     virtual void setupDefaults() {
-        setScale(1.f);
+        setScale(0.9f);
     }
     virtual void onProjectileHitZombie(ZombieBase* z);
 
