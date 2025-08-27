@@ -33,6 +33,7 @@
 #include "CCEventListenerMouse.h"
 #include "Zombies/ZombieWeak.h"
 #include "Plants/PeaShooter.h"
+#include "Controllers/ZombieController.h"
 
 #include "2d/CCActionInterval.h"
 #include "cocos/2d/CCAnimation.h"
@@ -275,6 +276,21 @@ bool GameScene::isInTheSameRowAndFront(cocos2d::Node *plant, cocos2d::Node *zomb
     return false;
 }
 
+ZombieBase* GameScene::getNearestZombieInFront(PeaShooter* peashooter)
+{
+    ZombieBase* nearestZombie = nullptr;
+    for (auto* zombie : zombieController_->getZombies()) {
+        if (!zombie || zombie->isDead()) continue;
+        if (!isInTheSameRowAndFront(peashooter, zombie)) continue;
+
+        if (!nearestZombie ||
+            zombie->getPositionX() < nearestZombie->getPositionX()) {
+            nearestZombie = zombie;
+            }
+    }
+    return nearestZombie;
+}
+
 void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
 {
     if (auto* const backButton = CreateBackButton(origin, visibleSize))
@@ -297,6 +313,34 @@ void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visib
         mCellSize.height,
         gridSize::GRID_ROWS
     );
+}
+
+void GameScene::reTargetAllPeaShooters()
+{
+    // Retarget loop for peashooters
+    this->enumerateChildren("PeaShooter", [this](cocos2d::Node* node){
+        auto* shooter = dynamic_cast<PeaShooter*>(node);
+        if (!shooter) return false;
+
+        auto* t = shooter->currentTarget_;  // find the current target of the peashooter
+        const bool needRetarget =
+            (!t) || (t->isDead()) || (!t->getParent()) ||
+            (t->getPositionX() < shooter->getPositionX());   // if the target is dead, or target is passed the plant then we need retarget
+
+        if (needRetarget) {
+            if (auto* next = getNearestZombieInFront(shooter)) {
+                shooter->startAutoFire(next, this, zOrders::PEA_Z_ORDER);
+            }
+        }
+        return false; /// continue enumerating children
+    });
+}
+
+void GameScene::setupPeaRetargetLoop(float retargetPeriod)
+{
+    this->schedule([this](float){
+        this->reTargetAllPeaShooters();
+    }, retargetPeriod, "retarget_tick");
 }
 
 bool GameScene::init()
@@ -343,12 +387,12 @@ bool GameScene::init()
         float y = origin.y + closeItem->getContentSize().height/2;
         closeItem->setPosition(Vec2(x,y));
     }
-
     auto menu = Menu::create(closeItem, NULL);
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, zOrders::MENU_Z_ORDER);
 
     CreateUI(origin, visibleSize);
+    setupPeaRetargetLoop();
     return true;
 }
 

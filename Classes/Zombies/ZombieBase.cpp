@@ -35,6 +35,15 @@ void ZombieBase::update(float dt)
     setPositionX(x);
 }
 
+int ZombieBase::getRow() const
+{
+    return row_;
+}
+
+void ZombieBase::setRow(int row) {
+    row_ = row;
+}
+
 void ZombieBase::takeDamage(float dmg)
 {
     if (isDead()) return;

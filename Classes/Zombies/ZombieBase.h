@@ -28,6 +28,9 @@ public:
     void setSpeed(float s)          {speed_ = s;}
     void setStopX(float x)          {stopX_ = x;}
 
+    int getRow() const;
+    void setRow(int row);
+
 protected:
     virtual const char* getImagePath() const { return "zombie.png"; }
     virtual void setupDefaults() {
@@ -42,6 +45,7 @@ protected:
     float speed_    =   20.f;
     float stopX_    =   100.f;
     bool dead_      =   false;
+    int row_        =   -1;
 
     DeathCallback onDeath_{nullptr};
 };

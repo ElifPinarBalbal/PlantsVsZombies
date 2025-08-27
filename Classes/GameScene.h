@@ -31,12 +31,19 @@
 #include "Zombies/ZombieBase.h"
 #include <array>
 #include  "Plants/PlantBase.h"
+#include "Plants/PeaShooter.h"
 #include "Controllers/ZombieController.h"
 
-namespace gridSize {
+namespace gridSize
+{
     static constexpr int GRID_COLS = 9;
     static constexpr int GRID_ROWS = 5;
     static constexpr int GRID_SIZE = GRID_COLS * GRID_ROWS;
+}
+
+namespace peaRetarget
+{
+    constexpr float PEA_RETARGET_LOOP_PERIOD = 0.001f;
 }
 class ZombieBase;
 class GameScene : public cocos2d::Scene
@@ -48,12 +55,13 @@ public:
     void menuCloseCallback(cocos2d::Ref* pSender);
     void CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize);
 
+    void setupPeaRetargetLoop(float retargetPeriod = peaRetarget::PEA_RETARGET_LOOP_PERIOD);
+    void reTargetAllPeaShooters();
+
     CREATE_FUNC(GameScene);
 
 private:
     ZombieController* zombieController_ = nullptr;
-
-
     int mHoverIdx = -1;
     cocos2d::DrawNode* mHoverRect = nullptr;
 
@@ -73,11 +81,12 @@ private:
     void BuildGroundGrid(const cocos2d::Size& visibleSize, const cocos2d::Vec2& origin);
     cocos2d::Vec2 CellCenter(int col, int row) const;
     cocos2d::Sprite* checkTileAt(int row, int col) const;
-
     void setupGridHover();
     int whichRowFromY (float positionY) const;
     bool isInTheSameRow(cocos2d::Node *nodeA, cocos2d::Node *nodeB) const;
     bool isInTheSameRowAndFront(cocos2d::Node *nodeA, cocos2d::Node *nodeB) const;
+    ZombieBase* getNearestZombieInFront(PeaShooter* peashooter);
+
     bool cellOccupied(int row, int col) const {
         return mPlants[index(row, col)] != nullptr;
     }
