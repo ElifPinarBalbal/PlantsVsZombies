@@ -81,6 +81,10 @@ private:
     void BuildGroundGrid(const cocos2d::Size& visibleSize, const cocos2d::Vec2& origin);
     cocos2d::Vec2 CellCenter(int col, int row) const;
     cocos2d::Sprite* checkTileAt(int row, int col) const;
+
+    PlantBase *getNearestPlantAheadInRow(int row, float xMin) const;
+    void updateZombieEating();
+
     void setupGridHover();
     int whichRowFromY (float positionY) const;
     bool isInTheSameRow(cocos2d::Node *nodeA, cocos2d::Node *nodeB) const;
@@ -93,6 +97,7 @@ private:
     void markCell(int row, int col, PlantBase* p) {
         mPlants[index(row, col)] = p;
     }
+    void unMarkCellForDeadPlant(PlantBase* plant);
 };
 
 #endif // __SECOND_SCENE_H__

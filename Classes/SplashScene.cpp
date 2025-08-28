@@ -79,7 +79,6 @@ bool SplashScene::init()
     auto height = visibleSize.height / 2;
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
-
     auto closeItem = MenuItemImage::create(
                                            "CloseNormal.png",
                                            "CloseSelected.png",
@@ -144,14 +143,10 @@ bool SplashScene::init()
         bad->setPosition(200, 200);
         addChild(bad);
     }*/
-
     return true;
 }
-
 
 void SplashScene::menuCloseCallback(Ref* pSender)
 {
     Director::getInstance()->end();
 }
-
-

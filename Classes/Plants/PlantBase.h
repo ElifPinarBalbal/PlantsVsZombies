@@ -17,6 +17,13 @@ public:
     void setHP(float hp)            { hp_ = hp; }
     float hp() const                { return hp_; }
 
+    void takeDamage(float dmg);
+    bool isDead() const { return dead_; }
+    void plantDie();
+
+    using DeathCallback = std::function<void(PlantBase*)>;
+    void setOnDeath(DeathCallback callback);
+
 protected:
     virtual const char* getImagePath() const { return "peaShooter.png"; } 
     virtual void setupDefaults() {
@@ -27,6 +34,11 @@ protected:
     float hp_       =   100.f;
     float maxHp_    =   100.f;
     bool dead_      =   false;
+
+    DeathCallback onDeath_{nullptr};
+    std::vector<DeathCallback> deathListeners_;  // I added this listener to notify that a plant is dead to other classes
+
+
 
 };
 #endif //PLANTSVSZOMBIES_PLANTBASE_H

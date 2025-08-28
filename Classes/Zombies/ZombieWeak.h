@@ -13,12 +13,11 @@ public:
 protected:
     const char* getImagePath() const override { return "zombie.png"; }
     void setupDefaults() override {
-        hp_    = 100.f;
+        hp_    = 500.f;
         speed_ = 20.f;
         stopX_ = 100.f;
         setScale(0.75f);
     }
-
 };
 
 #endif //PLANTSVSZOMBIES_ZOMBIEWEAK_H

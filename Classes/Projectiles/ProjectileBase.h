@@ -17,11 +17,10 @@ public:
     void setVelocity(const cocos2d::Vec2& v) { velocity_ = v; }
     void giveDamage(float d) { damage_ = d; }
     void setTarget(ZombieBase* z) { target_ = z; }
-
     void startShootingProjectile();
 
 protected:  // can be overriden by subclasses-only
-    virtual const char* spriteFile() const { return "pea.png"; } 
+    virtual const char* spriteFile() const { return "pea.png"; }
     virtual void setupDefaults() {
         setScale(0.9f);
     }
@@ -34,8 +33,6 @@ private:
 
     bool IsPeaOutOfBounds() const;
     bool IsHittingTarget() const;
-
 };
-
 
 #endif //PLANTSVSZOMBIES_PROJECTILEBASE_H
