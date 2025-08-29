@@ -28,7 +28,7 @@ void PlantController::onPlantDeath(PlantBase* plant)
 
 const std::vector<PlantBase*>& PlantController::getPlantsInRow(int row) const
 {
-    static const std::vector<PlantBase*> kEmpty;  // constant naming
+    static const std::vector<PlantBase*> kEmpty;
     auto plantsInRow = plantsByRow_.find(row);
     return (plantsInRow == plantsByRow_.end()) ? kEmpty : plantsInRow->second;
 }
@@ -39,7 +39,7 @@ PlantBase* PlantController::getNearestPlantInRow(int row, float xMax) const
     if (plantInRow == plantsByRow_.end()) return nullptr;
 
     PlantBase* nearestPlant = nullptr;
-    float maxX = -std::numeric_limits<float>::infinity();   // I used this assigning to max (to compare) - but I'm not sure that is it the best practice :)
+    float maxX = -std::numeric_limits<float>::infinity();
 
     for (auto* plant : plantInRow->second) {
         if (!plant || !plant->getParent() || plant->isDead()) continue;

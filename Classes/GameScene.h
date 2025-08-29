@@ -71,6 +71,28 @@ private:
     cocos2d::Vec2 mGridOrigin;
     std::array<PlantBase*, gridSize::GRID_SIZE> mPlants{};   // nullptr = empty
 
+    // Score HUD
+    int mScore = 0;   // shows the number of died zombies
+    cocos2d::Label* mScoreLabel = nullptr;
+    cocos2d::Node* mScoreHUD = nullptr;
+    cocos2d::DrawNode* mScoreBoxGeometry = nullptr;
+
+    void initScoreUI();
+    void hookScoreToNewZombies();
+    void updateScoreBoxGeometry();   // if the score's number of digits change, then box will also expand
+
+    // SUN - currency HUD
+    int mSun = 0;
+    cocos2d::Label* mSunLabel = nullptr;
+    cocos2d::Node* mSunHUD = nullptr;
+    cocos2d::DrawNode* mSunBoxGeometry = nullptr;
+
+    void initSunUI();
+    void updateSunBoxGeometry();
+    void addSun(int sunAmount);
+    bool spendSun(int sunAmount); // returns false if not enough
+
+    class SunController* sunController_ = nullptr;
 
     // convert row col index
     static constexpr  int index(int row, int col)

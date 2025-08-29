@@ -28,6 +28,7 @@
 #include "cocos/2d/CCSprite.h"
 #include "cocos/base/CCDirector.h"
 #include  "GameScene.h"
+#include "2d/CCDrawNode.h"
 
 #include "CCEventDispatcher.h"
 #include "CCEventListenerMouse.h"
@@ -35,6 +36,7 @@
 #include "Plants/PeaShooter.h"
 #include "Controllers/ZombieController.h"
 #include "Controllers/PlantController.h"
+#include "Controllers/SunController.h"
 
 #include "2d/CCActionInterval.h"
 #include "cocos/2d/CCAnimation.h"
@@ -76,12 +78,23 @@ namespace zOrders
     constexpr int BACKGROUND_Z_ORDER = 0;
     constexpr int MENU_Z_ORDER = 1;
     constexpr int HOVERED_TILE_Z_ORDER = 50;
+    constexpr int M_SCORE_HUD_Z_ORDER = 1000;
+    constexpr int M_SCORE_BOX_GEOMETRY_Z_ORDER = 0;
+    constexpr int M_SCORE_LABEL_Z_ORDER = 1;
+    constexpr int M_SUN_HUD_Z_ORDER = 1000;
+    constexpr int M_SUN_BOX_GEOMETRY_Z_ORDER = 0;
+    constexpr int M_SUN_LABEL_Z_ORDER = 1;
 }
 
-namespace zombieEating
+namespace
 {
-    constexpr float ZOMBIE_STAND_OFF = 50.f;
-    constexpr float ZOMBIE_DETECT_REACH_OFFSET = 0.5f;
+    constexpr int TAG_SCORE_HOOKED = 0x51A;
+}
+
+namespace HUD_paddings
+{
+    constexpr int PADDING_X = 16.f;
+    constexpr int PADDING_Y = 10.f;
 }
 Scene* GameScene::createScene()
 {
@@ -185,8 +198,8 @@ PlantBase* GameScene::getNearestPlantAheadInRow(int row, float xMin) const
 
 void GameScene::updateZombieEating()
 {
-    const float standOff     = zombieEating::ZOMBIE_STAND_OFF;
-    const float detectReach  = standOff + zombieEating::ZOMBIE_DETECT_REACH_OFFSET;
+    const float STAND_OFF     = 50.f;                // where zombie will stop according to the plant
+    const float DETECT_REACH  = STAND_OFF + 5.f;      // start eating a bit early - so do not overlap
 
     for (auto* zombie : zombieController_->getZombies()) {
         if (!zombie || !zombie->getParent() || zombie->isDead()) continue;
@@ -201,9 +214,10 @@ void GameScene::updateZombieEating()
 
         const float distanceX = zombie->getPositionX() - plant->getPositionX();
         if (!zombie->isEating()) {
-            if (distanceX >= standOff && distanceX <= detectReach) {
+            if (distanceX >= STAND_OFF && distanceX <= DETECT_REACH) {
                 zombie->startEating(plant);
             }
+        } else {
         }
     }
 }
@@ -273,6 +287,17 @@ void GameScene::setupGridHover()
         auto* peaShooter = PeaShooter::create();
         if (!peaShooter) return;
 
+        constexpr int PEA_COST = 20;
+        if (!spendSun(PEA_COST)) {
+            // not enough — give a small HUD feedback
+            if (mSunHUD) {
+                mSunHUD->runAction(Sequence::create(
+                    cocos2d::TintTo::create(0.05f, 255,120,120),
+                    cocos2d::TintTo::create(0.15f, 255,255,255),
+                    nullptr));
+            }
+            return;
+        }
         peaShooter->setPosition(CellCenter(col, row));
         peaShooter->setName("PeaShooter");
 
@@ -406,6 +431,114 @@ void GameScene::setupPeaRetargetLoop(float retargetPeriod)
     }, retargetPeriod, "retarget_tick");
 }
 
+void GameScene::updateScoreBoxGeometry()
+{
+    // paddings
+    const float paddingX = HUD_paddings::PADDING_X;
+    const float paddingY = HUD_paddings::PADDING_Y;
+
+    const Size labelSize = mScoreLabel->getContentSize();
+    const Size box(labelSize.width + paddingX * 2.f, labelSize.height + paddingY * 2.f);
+
+    mScoreLabel->setPosition(Vec2(paddingX, box.height * 0.5f));
+
+    mScoreBoxGeometry->clear();  // redraw in each change
+
+    const Vec2 bl(0.f, 0.f);
+    const Vec2 tr(box.width, box.height);
+
+    //semi-transparent - thin border
+    mScoreBoxGeometry->drawSolidRect(bl, tr, Color4F(0.f, 0.f, 0.f, 0.45f));
+    mScoreBoxGeometry->drawRect(bl, tr, Color4F(1.f, 1.f, 1.f, 0.9f));
+
+    mScoreHUD->setContentSize(box);
+}
+
+void GameScene::updateSunBoxGeometry()
+{
+    const float paddingX = HUD_paddings::PADDING_X;
+    const float paddingY = HUD_paddings::PADDING_Y;
+
+    const Size labelSize = mSunLabel->getContentSize();
+    const Size box(labelSize.width + paddingX*2.f, labelSize.height + paddingY*2.f);
+
+    mSunLabel->setPosition({paddingX, box.height * 0.5f});
+    mSunBoxGeometry->clear();
+    mSunBoxGeometry->drawSolidRect({0,0}, {box.width, box.height}, Color4F(0.f,0.f,0.f,0.45f));
+    mSunBoxGeometry->drawRect({0,0}, {box.width, box.height}, Color4F(1.f,1.f,1.f,0.9f));
+    mSunHUD->setContentSize(box);
+}
+
+void GameScene::initScoreUI() {
+    auto visibleSize = cocos2d::Director::getInstance()->getVisibleSize();
+    auto visibleOrigin = cocos2d::Director::getInstance()->getVisibleOrigin();
+
+    mScoreHUD = Node::create();
+    mScoreHUD->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+    mScoreHUD->setPosition(visibleOrigin + Vec2(18.f, visibleSize.height - 14.f));
+    this->addChild(mScoreHUD, zOrders::M_SCORE_HUD_Z_ORDER);
+
+    mScoreBoxGeometry = DrawNode::create();
+    mScoreHUD->addChild(mScoreBoxGeometry, zOrders::M_SCORE_BOX_GEOMETRY_Z_ORDER);
+
+    mScoreLabel = Label::createWithTTF("Score: 0", "fonts/Marker Felt.ttf", 28);
+    mScoreLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    mScoreHUD->addChild(mScoreLabel, 1);
+    updateScoreBoxGeometry();
+}
+
+void GameScene::initSunUI()
+{
+    using namespace cocos2d;
+    const auto visibleSize = Director::getInstance()->getVisibleSize();
+    const auto visibleOrigin = Director::getInstance()->getVisibleOrigin();
+
+    mSunHUD = Node::create();
+    mSunHUD->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
+    // Adjust position to where you want (house area)
+    mSunHUD->setPosition(visibleOrigin + Vec2(18.f, visibleSize.height - 54.f));
+    addChild(mSunHUD, zOrders::M_SUN_HUD_Z_ORDER);
+
+    mSunBoxGeometry = DrawNode::create();
+    mSunHUD->addChild(mSunBoxGeometry, zOrders::M_SUN_BOX_GEOMETRY_Z_ORDER);
+
+    mSunLabel = Label::createWithTTF("Sun: 0", "fonts/Marker Felt.ttf", 26);
+    mSunLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE_LEFT);
+    mSunHUD->addChild(mSunLabel, zOrders::M_SUN_LABEL_Z_ORDER);
+
+    updateSunBoxGeometry();
+}
+
+void GameScene::addSun(int sunAmount)
+{
+    mSun += sunAmount;
+    if (mSunLabel) { mSunLabel->setString("Sun: " + std::to_string(mSun)); updateSunBoxGeometry(); }
+}
+
+bool GameScene::spendSun(int sunAmount)
+{
+    if (mSun < sunAmount) return false;
+    mSun -= sunAmount;
+    if (mSunLabel) { mSunLabel->setString("Sun: " + std::to_string(mSun)); updateSunBoxGeometry(); }
+    return true;
+}
+
+void GameScene::hookScoreToNewZombies() {
+    for (auto* zombie : zombieController_->getZombies()) {
+        if (!zombie || !zombie->getParent() || zombie->isDead()) continue;
+        if (zombie->getTag() == TAG_SCORE_HOOKED) continue;
+        zombie->setTag(TAG_SCORE_HOOKED);
+
+        zombie->addOnDeath([this](ZombieBase*) {
+            ++mScore;
+            if (mScoreLabel) {
+                mScoreLabel->setString("Score: " + std::to_string(mScore));
+                updateScoreBoxGeometry();
+            }
+        });
+    }
+}
+
 bool GameScene::init()
 {
     if ( !Scene::init() )
@@ -432,6 +565,33 @@ bool GameScene::init()
     }
     BuildGroundGrid(visibleSize, origin);
     setupGridHover();
+
+    initScoreUI();
+    schedule([this](float){ hookScoreToNewZombies(); }, 0.25f, "score_hook_tick");
+
+    initSunUI();
+
+    sunController_ = SunController::create();
+    addChild(sunController_, /*z*/ 20);
+
+    const cocos2d::Rect fallArea(
+    mGridOrigin.x,
+    mGridOrigin.y,
+    mCellSize.width  * gridSize::GRID_COLS,
+    mCellSize.height * gridSize::GRID_ROWS);
+    sunController_->setFallArea(fallArea);
+
+    this->schedule([this](float){
+        // Iterate current children of sun controller and attach listener once
+        for (auto* node : sunController_->getChildren()) {
+            auto* sun = dynamic_cast<Sun*>(node);
+            if (!sun || sun->getTag() == 0xC0FE) continue;
+            sun->setTag(0xC0FE);
+            sun->addOnSunCollected([this](Sun* whichSun){
+                this->addSun(whichSun->sunAmount());  // +10
+            });
+        }
+    }, 0.2f, "sun_hook_tick");
 
     auto* plantController = PlantController::create();
     plantController->setName("PlantController");

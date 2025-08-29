@@ -9,14 +9,6 @@
 #include "2d/CCActionEase.h"
 #include "2d/CCActionInstant.h"
 
-namespace plantDieAnimation
-{
-    constexpr float FALL_DURATION                   = 0.6f;
-    constexpr float FALL_DELTA_ANGLE                = -90.f;
-    constexpr float FALL_DELTA_POSITION_XX          = 0.f;
-    constexpr float FALL_DELTA_POSITION_YY          = -10.f;
-}
-
 bool PlantBase::init()
 {
     if (!Sprite::initWithFile(getImagePath())) return false;
@@ -48,8 +40,8 @@ void PlantBase::plantDie()
     cocos2d::log("Plant died");
     auto fall  = cocos2d::EaseSineIn::create(
                   cocos2d::Spawn::create(
-                      cocos2d::RotateBy::create(plantDieAnimation::FALL_DURATION, plantDieAnimation::FALL_DELTA_ANGLE),
-                      cocos2d::MoveBy::create(plantDieAnimation::FALL_DURATION, {plantDieAnimation::FALL_DELTA_POSITION_XX, -plantDieAnimation::FALL_DELTA_POSITION_YY}),
+                      cocos2d::RotateBy::create(0.6f, -90.f),
+                      cocos2d::MoveBy::create(0.6f, {0.f, -10.f}),
                       nullptr));
     auto fade  = cocos2d::FadeOut::create(0.35f);
     auto clean = cocos2d::CallFunc::create([this]{

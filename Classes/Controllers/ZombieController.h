@@ -19,5 +19,6 @@ public:
 
 private:
     std::vector<ZombieBase*> zombies_;
+    int countOfDeadZombies_;        // this will be the score
 };
 #endif //PLANTSVSZOMBIES_ZOMBIECONTROLLER_H

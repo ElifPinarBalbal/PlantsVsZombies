@@ -24,6 +24,10 @@ public:
     using DeathCallback = std::function<void(ZombieBase*)>;
     void setOnDeath(DeathCallback callback) {onDeath_ = std::move(callback);}
 
+    // another callback for update score label after zombie died
+    using DeathCallbackScore = std::function<void(ZombieBase*)>;
+    void addOnDeath(DeathCallbackScore callback);
+
     // movement
     void setSpeed(float s)          {speed_ = s;}
     void setStopX(float x)          {stopX_ = x;}
@@ -58,6 +62,8 @@ protected:
     float savedStopX_   = 0.f;
 
     DeathCallback onDeath_{nullptr};
+    std::vector<DeathCallbackScore> deathListeners_;       // notify scene for score update
+
 };
 
 #endif //PLANTSVSZOMBIES_ZOMBIE_H

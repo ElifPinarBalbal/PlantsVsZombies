@@ -101,7 +101,12 @@ void ZombieBase::zombieDie()
     auto fade  = cocos2d::FadeOut::create(0.35f);
     auto clean = cocos2d::CallFunc::create([this]{
             if (onDeath_) onDeath_(this);
+            for (auto& callback : deathListeners_) callback(this);  // notify Gamescene to update score
         });  // clean - notifies the controller and pass the dying zombie with "this"
 
     runAction(cocos2d::Sequence::create(fall, fade, clean, nullptr));
+}
+
+void ZombieBase::addOnDeath(DeathCallbackScore callback) {
+    if (callback) deathListeners_.push_back(std::move(callback));
 }
