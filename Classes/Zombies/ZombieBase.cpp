@@ -7,7 +7,7 @@
 #include "cocos/2d/CCActionInterval.h"
 #include "cocos/2d/CCActionEase.h"
 #include <functional>
-#include "Controllers/ZombieController.h"
+#include "Plants/PlantBase.h"
 
 namespace zombieDieAnimation
 {
@@ -15,6 +15,11 @@ namespace zombieDieAnimation
     constexpr float FALL_DELTA_ANGLE                = -90.f;
     constexpr float FALL_DELTA_POSITION_XX          = 0.f;
     constexpr float FALL_DELTA_POSITION_YY          = -10.f;
+}
+
+namespace zombieEat
+{
+    constexpr float ZOMBIE_STAND_OFF_OFFSET         = 50.f;
 }
 
 bool ZombieBase::init() {
@@ -50,6 +55,35 @@ void ZombieBase::takeDamage(float dmg)
     hp_ -= dmg;
     //cocos2d::log("Zombie HP: %.1f", hp_);
     if (hp_ <= 0.f) zombieDie();
+}
+
+void ZombieBase::startEating(PlantBase* plant)
+{
+    if (!plant || plant->isDead()) return;
+    if (!eatingTarget_) savedStopX_ = stopX_;
+    eatingTarget_ = plant;
+
+    cocos2d::log("startEating");
+
+    const float standOff = zombieEat::ZOMBIE_STAND_OFF_OFFSET;            // a LITTLE BIT front
+    setStopX(plant->getPositionX() + standOff);
+
+    this->unschedule("z_eat");
+    this->schedule([this](float){
+        if (isDead() || !eatingTarget_ || !eatingTarget_->getParent() || eatingTarget_->isDead()) {
+            stopEating();
+            return;
+        }
+        eatingTarget_->takeDamage(biteDamage_);
+    }, biteInterval_, "z_eat");
+}
+
+void ZombieBase::stopEating()
+{
+    if (!eatingTarget_) return;
+    unschedule("z_eat");
+    eatingTarget_ = nullptr;
+    setStopX(savedStopX_);
 }
 
 void ZombieBase::zombieDie()

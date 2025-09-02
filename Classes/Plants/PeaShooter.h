@@ -17,7 +17,7 @@ public:
 protected:
     const char* getImagePath() const override { return "peaShooter.png"; };
     void setupDefaults() override {
-        setScale(0.2f);
+        setScale(0.17f);
     }
 };
 

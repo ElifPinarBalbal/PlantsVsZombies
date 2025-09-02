@@ -27,17 +27,22 @@ public:
     // movement
     void setSpeed(float s)          {speed_ = s;}
     void setStopX(float x)          {stopX_ = x;}
+    float getStopX() const          { return stopX_; }
 
     int getRow() const;
     void setRow(int row);
 
+    void startEating(class PlantBase* plant);
+    void stopEating();
+    bool isEating() const { return eatingTarget_ != nullptr; }
+
 protected:
     virtual const char* getImagePath() const { return "zombie.png"; }
     virtual void setupDefaults() {
-        hp_    = 50.f;
+        hp_    = 100.f;
         speed_ = 20.f;
         stopX_ = 100.f;
-        setScale(0.85f);
+        setScale(0.75f);
     }
 
     float maxHp_    =   100.f;
@@ -46,6 +51,11 @@ protected:
     float stopX_    =   100.f;
     bool dead_      =   false;
     int row_        =   -1;
+
+    PlantBase* eatingTarget_ = nullptr;
+    float biteInterval_ = 0.8f;
+    float biteDamage_   = 20.f;
+    float savedStopX_   = 0.f;
 
     DeathCallback onDeath_{nullptr};
 };

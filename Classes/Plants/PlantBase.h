@@ -14,11 +14,31 @@ class PlantBase : public cocos2d::Sprite{
 public:
     CREATE_FUNC(PlantBase);
     bool init() override;
+    void setHP(float hp)            { hp_ = hp; }
+    float hp() const                { return hp_; }
+
+    void takeDamage(float dmg);
+    bool isDead() const { return dead_; }
+    void plantDie();
+
+    using DeathCallback = std::function<void(PlantBase*)>;
+    void setOnDeath(DeathCallback callback);
 
 protected:
-    virtual const char* getImagePath() const { return "peaShooter.png"; } // default image
+    virtual const char* getImagePath() const { return "peaShooter.png"; } 
     virtual void setupDefaults() {
-        setScale(0.2f);
+        hp_    = 100.f;
+        setScale(0.17f);
     }
+
+    float hp_       =   100.f;
+    float maxHp_    =   100.f;
+    bool dead_      =   false;
+
+    DeathCallback onDeath_{nullptr};
+    std::vector<DeathCallback> deathListeners_;  // I added this listener to notify that a plant is dead to other classes
+
+
+
 };
 #endif //PLANTSVSZOMBIES_PLANTBASE_H

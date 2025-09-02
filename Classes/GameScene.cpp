@@ -34,6 +34,7 @@
 #include "Zombies/ZombieWeak.h"
 #include "Plants/PeaShooter.h"
 #include "Controllers/ZombieController.h"
+#include "Controllers/PlantController.h"
 
 #include "2d/CCActionInterval.h"
 #include "cocos/2d/CCAnimation.h"
@@ -75,6 +76,12 @@ namespace zOrders
     constexpr int BACKGROUND_Z_ORDER = 0;
     constexpr int MENU_Z_ORDER = 1;
     constexpr int HOVERED_TILE_Z_ORDER = 50;
+}
+
+namespace zombieEating
+{
+    constexpr float ZOMBIE_STAND_OFF = 50.f;
+    constexpr float ZOMBIE_DETECT_REACH_OFFSET = 0.5f;
 }
 Scene* GameScene::createScene()
 {
@@ -168,10 +175,43 @@ cocos2d::Sprite* GameScene::checkTileAt(int row, int col) const
     return mTiles.at(index(row, col));
 }
 
+PlantBase* GameScene::getNearestPlantAheadInRow(int row, float xMin) const
+{
+    if (auto* plantController = this->getChildByName<PlantController*>("PlantController")) {
+        return plantController->getNearestPlantInRow(row, xMin);
+    }
+    return nullptr;
+}
+
+void GameScene::updateZombieEating()
+{
+    const float standOff     = zombieEating::ZOMBIE_STAND_OFF;
+    const float detectReach  = standOff + zombieEating::ZOMBIE_DETECT_REACH_OFFSET;
+
+    for (auto* zombie : zombieController_->getZombies()) {
+        if (!zombie || !zombie->getParent() || zombie->isDead()) continue;
+
+        const int row = whichRowFromY(zombie->getPositionY());
+        auto* plant = getNearestPlantAheadInRow(row, zombie->getPositionX());
+
+        if (!plant) {
+            if (zombie->isEating()) zombie->stopEating();
+            continue;
+        }
+
+        const float distanceX = zombie->getPositionX() - plant->getPositionX();
+        if (!zombie->isEating()) {
+            if (distanceX >= standOff && distanceX <= detectReach) {
+                zombie->startEating(plant);
+            }
+        }
+    }
+}
+
 void GameScene::setupGridHover()
 {
     mHoverRect = cocos2d::DrawNode::create();
-    this->addChild(mHoverRect, zOrders::HOVERED_TILE_Z_ORDER); // above tiles
+    this->addChild(mHoverRect, zOrders::HOVERED_TILE_Z_ORDER);
 
     auto listener = cocos2d::EventListenerMouse::create();
     listener->onMouseMove = [this](cocos2d::EventMouse* event)
@@ -237,7 +277,16 @@ void GameScene::setupGridHover()
         peaShooter->setName("PeaShooter");
 
         this->addChild(peaShooter, zOrders::PEASHOOTER_Z_ORDER);
+
+        if (auto* plantController = this->getChildByName<PlantController*>("PlantController")) {
+            plantController->addPlant(peaShooter, row);
+        }
+
         markCell(row, col, peaShooter);
+
+        peaShooter->setOnDeath([this](PlantBase* p){
+            this->unMarkCellForDeadPlant(p);  // free the tile so we can plant again - when plant is dead
+        });
 
         for (auto* zombie : zombieController_->getZombies()) {
             if (isInTheSameRowAndFront(peaShooter, zombie)) {
@@ -274,6 +323,20 @@ bool GameScene::isInTheSameRowAndFront(cocos2d::Node *plant, cocos2d::Node *zomb
         return false;
     }
     return false;
+}
+
+void GameScene::unMarkCellForDeadPlant(PlantBase* plant)
+{
+    if (!plant) return;
+    for (int row = 0; row < gridSize::GRID_ROWS; ++row) {
+        for (int col = 0; col < gridSize::GRID_COLS; ++col) {
+            const int tile = index(row, col);
+            if (mPlants[tile] == plant) {
+                mPlants[tile] = nullptr;
+                return;
+            }
+        }
+    }
 }
 
 ZombieBase* GameScene::getNearestZombieInFront(PeaShooter* peashooter)
@@ -370,6 +433,11 @@ bool GameScene::init()
     BuildGroundGrid(visibleSize, origin);
     setupGridHover();
 
+    auto* plantController = PlantController::create();
+    plantController->setName("PlantController");
+    this->addChild(plantController, zOrders::PEASHOOTER_Z_ORDER);
+
+
     auto closeItem = MenuItemImage::create(
                                            "CloseNormal.png",
                                            "CloseSelected.png",
@@ -393,6 +461,7 @@ bool GameScene::init()
 
     CreateUI(origin, visibleSize);
     setupPeaRetargetLoop();
+    this->schedule([this](float){ this->updateZombieEating(); }, 0.1f, "zombie_bite_loop");
     return true;
 }
 
@@ -400,4 +469,3 @@ void GameScene::menuCloseCallback(Ref* pSender)
 {
     Director::getInstance()->end();
 }
-
