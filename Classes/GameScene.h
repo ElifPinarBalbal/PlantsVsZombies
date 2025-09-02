@@ -76,7 +76,9 @@ private:
     cocos2d::Sprite* checkTileAt(int row, int col) const;
 
     void setupGridHover();
-
+    int whichRowFromY (float positionY) const;
+    bool isInTheSameRow(cocos2d::Node *nodeA, cocos2d::Node *nodeB) const;
+    bool isInTheSameRowAndFront(cocos2d::Node *nodeA, cocos2d::Node *nodeB) const;
     bool cellOccupied(int row, int col) const {
         return mPlants[index(row, col)] != nullptr;
     }

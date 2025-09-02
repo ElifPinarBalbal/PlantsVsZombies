@@ -16,8 +16,23 @@ void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, i
     if (!world) return;
 
     if (!target || !target->getParent()) return;   // if no zombie, then no shoot
+
+    this->unschedule("auto_fire_timer");
     // fire pea every 0.8 seconds
     this->schedule([this, target, world, pea_Z_Order](float) {
+
+        if (!this->getParent() || !target || !target->getParent()) {
+            this->unschedule("auto_fire_timer");
+            return;
+        }
+
+        // STOP when zombie is no longer in front of the peashooter
+        if (target->getPositionX() < this->getPositionX()) {
+            this->unschedule("auto_fire_timer");
+            CCLOG("PeaShooter: stopped firing - zombie passed it");
+            return;
+        }
+
         // create pea - there is zombie :)
         auto* pea = Pea::create();
         if (!pea) return;
@@ -31,3 +46,5 @@ void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, i
         pea->startShootingProjectile();
        }, intervals::SHOOT_INTERVAL_SECONDS, "auto_fire_timer");
 }
+
+// shooting only in the same row logic will be added

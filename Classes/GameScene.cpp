@@ -115,31 +115,6 @@ cocos2d::ui::Button* CreateBackButton(const cocos2d::Vec2& origin, const cocos2d
     return backButton;
 }
 
-cocos2d::Sprite* CreatePeaShooterSprite (const cocos2d::Size& visibleSize) {
-    auto* const peaShooter = cocos2d::Sprite::create("peaShooter.png");
-    if (!peaShooter) {
-        problemLoading("peaShooter.png");
-        return nullptr;
-    }
-
-    peaShooter->setPosition({
-        210.f, 270.f
-    });
-    peaShooter->setScale(0.2f);
-    return peaShooter;
-}
-
-cocos2d::Sprite* CreatePeaSprite (const cocos2d::Size& visibleSize) {
-    auto* const pea = cocos2d::Sprite::create("pea.png");
-    if (!pea) {
-        problemLoading("pea.png");
-        return nullptr;
-    }
-
-    pea->setScale(1.0f);
-    return pea;
-}
-
 // Grid Layout
 void GameScene::BuildGroundGrid(const Size& visibleSize, const Vec2& origin)
 {
@@ -244,7 +219,6 @@ void GameScene::setupGridHover()
             return;
 
         if (mHoverIdx < 0) return;
-
         int row = mHoverIdx / gridSize::GRID_COLS;
         int col = mHoverIdx % gridSize::GRID_COLS;
 
@@ -263,9 +237,37 @@ void GameScene::setupGridHover()
 
         this->addChild(peaShooter, zOrders::PEASHOOTER_Z_ORDER);
         markCell(row, col, peaShooter);
-        peaShooter->startAutoFire(mZombie, this, zOrders::PEA_Z_ORDER);
-    };
+        if (mZombie && isInTheSameRowAndFront(peaShooter, mZombie)) {
+            peaShooter->startAutoFire(mZombie, this, zOrders::PEA_Z_ORDER);
+        } else {
+            CCLOG("Shooter placed; no zombie in this row (not firing).");
+        }    };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+}
+
+// row number finder
+int GameScene::whichRowFromY (float positionY) const
+{
+    int row = static_cast<int>((positionY - mGridOrigin.y) / mCellSize.height);
+    if (row < 0 || row >= gridSize::GRID_ROWS) return -1;
+    return row;
+}
+
+bool GameScene::isInTheSameRow(cocos2d::Node* nodeA, cocos2d::Node* nodeB) const
+{
+    return (whichRowFromY(nodeA->getPositionY()) == whichRowFromY(nodeB->getPositionY()));
+}
+
+bool GameScene::isInTheSameRowAndFront(cocos2d::Node *plant, cocos2d::Node *zombie) const
+{
+    if (isInTheSameRow(plant, zombie))
+        {
+        if (plant->getPositionX() <= zombie->getPositionX()) {
+            return true;
+        }
+        return false;
+    }
+    return false;
 }
 
 void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visibleSize)
@@ -280,68 +282,10 @@ void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visib
         this->addChild(backButton, zOrders::BACK_BUTTON_Z_ORDER);
     }
 
-    if (auto* const pea = CreatePeaSprite(visibleSize)) {
-        mPeaSprite = pea;
-        this->addChild(pea, zOrders::PEA_Z_ORDER);
-    }
-
     auto* zombie = ZombieWeak::create();
     zombie->setPosition(650.f, 300.f);  // start position
     this->addChild(zombie, zOrders::ZOMBIE_Z_ORDER);
     mZombie = zombie;
-
-    if (mPeaShooterSprite && mZombie) {
-        // shoot the zombie with pea periodically
-        this->schedule([=](float) {    // starts a timer
-            // create pea
-            auto pea = CreatePeaSprite(Director::getInstance()->getVisibleSize());  // create pea only if there are both peaShooter and zombie
-            if (!pea) return;
-
-            const cocos2d::Vec2 muzzleOffset(40.f, 20.f);  // to make the pea occur from the "mouth" of the peaShooter
-            const cocos2d::Vec2 startPos = mPeaShooterSprite->getPosition() + muzzleOffset;
-            pea->setPosition(startPos);
-            this->addChild(pea, zOrders::PEA_Z_ORDER);
-
-            const float peaSpeed = 300.0f;
-
-            pea->schedule([this, pea, peaSpeed](float dt) {
-                if (!pea->getParent()) return;
-
-                pea->setPositionX(pea->getPositionX() + peaSpeed * dt); // move the pea
-
-                // off-screen situations
-                auto* dir    = cocos2d::Director::getInstance();
-                const auto visibleSize     = dir->getVisibleSize();
-                const auto origin = dir->getVisibleOrigin();
-                if (pea->getPositionX() > origin.x + visibleSize.width + 40.f) {
-                    pea->removeFromParent();
-                    return;
-                }
-                // collision situation !
-                if (mZombie && mZombie->getParent()) {
-                    auto peaRect = pea->getBoundingBox();
-                    auto zombieRect = mZombie->getBoundingBox();
-
-                    auto inset = [] (cocos2d::Rect rect, float px, float py) {
-                        rect.origin.x += px; rect.origin.y += py;
-                        rect.size.width -= 2*px;
-                        rect.size.height -= 2*py;
-                        return rect;
-                    };
-
-                    peaRect = inset(peaRect,peaRect.size.width * 0.1f,    peaRect.size.height * 0.30f);
-                    zombieRect = inset(zombieRect, zombieRect.size.width * 0.50f, zombieRect.size.height * 0.20f);
-
-                    if (peaRect.intersectsRect(zombieRect)) {
-                        mZombie->takeDamage(20.f);
-                        cocos2d::log("Zombie HP: %.1f", mZombie->hp());  // It correctly decreases the hp of zombie
-                        pea->removeFromParent();
-                        return;
-                    }
-            }
-            },"pea_step");
-        }, 0.8f, "pea_fire_timer");  // per 0.8 seconds
-    }
 }
 
 bool GameScene::init()
