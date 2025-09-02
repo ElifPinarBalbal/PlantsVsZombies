@@ -17,7 +17,7 @@ protected:
     const char* getImagePath() const override { return "potatoMine.png"; };
     void setupDefaults() override {
         setScale(0.65f);
-        setHP(1000.f);   // to not be eaten until get exploded
+        setHP(1000.f);   // to not be eaten until get exploded?
     }
 };
 

@@ -14,10 +14,9 @@ void PotatoMine::explode(class ZombieBase *target) {
     auto scale = cocos2d::ScaleBy::create(0.2f, 1.5f);
     auto fade  = cocos2d::FadeOut::create(0.2f);
     auto killBoth = cocos2d::CallFunc::create([this, target]() {
-        target->zombieDie();      // kill zombie
-        this->plantDie();   // kill plant (controller removes it)
+        target->zombieDie();// kill zombie
+        this->plantDie();   // kill plant
     });
-
     this->runAction(cocos2d::Sequence::create(cocos2d::Spawn::create(scale, fade, nullptr),
                                      killBoth, nullptr));
 }

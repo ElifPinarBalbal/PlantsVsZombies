@@ -17,7 +17,7 @@ public:
     bool init() override;
 
     PlantCard* addSlot(PlantType plantType, int plantCost, const std::string& plantImage, float imageScale = 0.35f);
-    void setSunAmount(int sunAmount);    // to enable or disable the plant card
+    void setSunAmount(int sunAmount);
 
     bool hasPlantSelection() const { return selectedPlant_ != nullptr; }
     PlantType selectedPlantType() const { return plantsAndTypes_.at(selectedPlant_); }
@@ -26,7 +26,6 @@ public:
     std::function<void(PlantType, PlantCard*)> onCardDragBegan;
 
 protected:
-
     void relayoutPlantsMenu();
     void refreshSunAmountRemaining();
 

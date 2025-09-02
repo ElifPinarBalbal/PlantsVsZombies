@@ -20,11 +20,6 @@ bool PlantCard::init() {
     plantCardBoxGeometry_ = cocos2d::DrawNode::create();
     addChild(plantCardBoxGeometry_, zOrders::PLANT_CARD_BOX_GEOMETRY_Z_ORDER);
 
-    /*plantCardImage_ = cocos2d::Sprite::create("peaShooter.png");
-    if (plantCardImage_) {
-        plantCardImage_->setScale(getPlantCardImageScale()); addChild(plantCardImage_, zOrders::PLANT_CARD_IMAGE_Z_ORDER);
-    }*/
-
     plantCardCostLabel_ = cocos2d::Label::createWithTTF("0", "fonts/Marker Felt.ttf", 20);
     plantCardCostLabel_->setAnchorPoint({1,1});
     addChild(plantCardCostLabel_, zOrders::PLANT_CARD_COST_LABEL_Z_ORDER);
