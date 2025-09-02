@@ -7,7 +7,8 @@
 #include "cocos/base/CCDirector.h"
 #include "Projectiles/Pea.h"
 
-namespace intervals {
+namespace intervals
+{
     constexpr float SHOOT_INTERVAL_SECONDS = 0.8f;
 }
 void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, int pea_Z_Order)
@@ -17,12 +18,13 @@ void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, i
 
     if (!target || !target->getParent()) return;   // if no zombie, then no shoot
 
+    currentTarget_ = target;
     this->unschedule("auto_fire_timer");
     // fire pea every 0.8 seconds
     this->schedule([this, target, world, pea_Z_Order](float) {
-
-        if (!this->getParent() || !target || !target->getParent()) {
+        if (!this->getParent() || !target || !target->getParent() || target->isDead() ) {
             this->unschedule("auto_fire_timer");
+            currentTarget_ = nullptr;  // zombie öldü
             return;
         }
 
@@ -46,5 +48,3 @@ void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, i
         pea->startShootingProjectile();
        }, intervals::SHOOT_INTERVAL_SECONDS, "auto_fire_timer");
 }
-
-// shooting only in the same row logic will be added

@@ -11,9 +11,9 @@ public:
     CREATE_FUNC(ZombieWeak);
 
 protected:
-    const char* spriteFile() const override { return "zombie.png"; } // I think we can also skip this --> it will use the default one (for this, it's the same)
+    const char* getImagePath() const override { return "zombie.png"; }
     void setupDefaults() override {
-        hp_    = 40.f;    // let's say, weaker than base
+        hp_    = 100.f;
         speed_ = 20.f;
         stopX_ = 100.f;
         setScale(0.85f);
