@@ -45,11 +45,11 @@ int ZombieBase::getRow() const
     return row_;
 }
 
-void ZombieBase::setRow(int row) {
+void ZombieBase::zombieSetRow(int row) {
     row_ = row;
 }
 
-void ZombieBase::takeDamage(float dmg)
+void ZombieBase::zombieTakeDamage(float dmg)
 {
     if (isDead()) return;
     hp_ -= dmg;
@@ -57,7 +57,7 @@ void ZombieBase::takeDamage(float dmg)
     if (hp_ <= 0.f) zombieDie();
 }
 
-void ZombieBase::startEating(PlantBase* plant)
+void ZombieBase::zombieStartEating(PlantBase* plant)
 {
     if (!plant || plant->isDead()) return;
     if (!eatingTarget_) savedStopX_ = stopX_;
@@ -71,14 +71,14 @@ void ZombieBase::startEating(PlantBase* plant)
     this->unschedule("z_eat");
     this->schedule([this](float){
         if (isDead() || !eatingTarget_ || !eatingTarget_->getParent() || eatingTarget_->isDead()) {
-            stopEating();
+            zombieStopEating();
             return;
         }
         eatingTarget_->takeDamage(biteDamage_);
     }, biteInterval_, "z_eat");
 }
 
-void ZombieBase::stopEating()
+void ZombieBase::zombieStopEating()
 {
     if (!eatingTarget_) return;
     unschedule("z_eat");

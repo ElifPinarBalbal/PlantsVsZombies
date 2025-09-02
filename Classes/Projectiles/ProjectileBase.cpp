@@ -86,7 +86,7 @@ bool ProjectileBase::IsHittingTarget() const {
 
 void ProjectileBase::onProjectileHitZombie(ZombieBase* zombie) {
     if (zombie) {
-        zombie->takeDamage(damage_);
+        zombie->zombieTakeDamage(damage_);
     }
     this->removeFromParent();
 }

@@ -30,7 +30,7 @@ void ZombieController::spawnZombies(int countOfZombies, float sceneWidth, float 
         float yPos = tileHeight * (4-row) + tileHeight - spawnConstants::Y_POS_OFFSET;         // I made (4-row) to count the rows from the top
 
         zombie->setPosition({xPos, yPos});
-        zombie->setRow(row);
+        zombie->zombieSetRow(row);
         cocos2d::log("Row number: %d", zombie->getRow());
         this->addChild(zombie);
         zombies_.push_back(zombie);             // put the pointer at the end of the vector

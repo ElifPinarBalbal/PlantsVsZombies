@@ -16,7 +16,7 @@ public:
     void update(float dt) override;
     void setHP(float hp)            { hp_ = hp; }
     float hp() const                { return hp_; }
-    void takeDamage(float dmg);
+    void zombieTakeDamage(float dmg);
     bool isDead()                   {return dead_;}
     void zombieDie();
 
@@ -34,36 +34,33 @@ public:
     float getStopX() const          { return stopX_; }
 
     int getRow() const;
-    void setRow(int row);
+    void zombieSetRow(int row);
 
-    void startEating(class PlantBase* plant);
-    void stopEating();
+    void zombieStartEating(class PlantBase* plant);
+    void zombieStopEating();
     bool isEating() const { return eatingTarget_ != nullptr; }
 
 protected:
     virtual const char* getImagePath() const { return "zombie.png"; }
     virtual void setupDefaults() {
-        hp_    = 100.f;
-        speed_ = 20.f;
-        stopX_ = 100.f;
+        hp_         = 100.f;
+        speed_      = 20.f;
+        stopX_      = 100.f;
         setScale(0.75f);
     }
-
-    float maxHp_    =   100.f;
-    float hp_       =   100.f;
-    float speed_    =   20.f;
-    float stopX_    =   100.f;
-    bool dead_      =   false;
-    int row_        =   -1;
-
-    PlantBase* eatingTarget_ = nullptr;
-    float biteInterval_ = 0.8f;
-    float biteDamage_   = 20.f;
-    float savedStopX_   = 0.f;
+    PlantBase* eatingTarget_    =   nullptr;
+    float maxHp_                =   100.f;
+    float hp_                   =   100.f;
+    float speed_                =   20.f;
+    float stopX_                =   100.f;
+    float biteInterval_         =   0.8f;
+    float biteDamage_           =   20.f;
+    float savedStopX_           =   0.f;
+    int row_                    =   -1;
+    bool dead_                  =   false;
 
     DeathCallback onDeath_{nullptr};
     std::vector<DeathCallbackScore> deathListeners_;       // notify scene for score update
-
 };
 
 #endif //PLANTSVSZOMBIES_ZOMBIE_H

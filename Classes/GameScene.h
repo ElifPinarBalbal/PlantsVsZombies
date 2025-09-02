@@ -33,6 +33,7 @@
 #include  "Plants/PlantBase.h"
 #include "Plants/PeaShooter.h"
 #include "Controllers/ZombieController.h"
+#include "UIComponents/PlantsMenu.h"
 
 namespace gridSize
 {
@@ -82,7 +83,7 @@ private:
     void updateScoreBoxGeometry();   // if the score's number of digits change, then box will also expand
 
     // SUN - currency HUD
-    int mSun = 0;
+    int mSun = 40;
     cocos2d::Label* mSunLabel = nullptr;
     cocos2d::Node* mSunHUD = nullptr;
     cocos2d::DrawNode* mSunBoxGeometry = nullptr;
@@ -93,6 +94,9 @@ private:
     bool spendSun(int sunAmount); // returns false if not enough
 
     class SunController* sunController_ = nullptr;
+
+    // Plant MENU - HUD layer
+    PlantsMenu* plantsMenu_ = nullptr;
 
     // convert row col index
     static constexpr  int index(int row, int col)
