@@ -36,7 +36,9 @@ void Sun::collectSunNow() {
     runAction(cocos2d::Sequence::create(
         cocos2d::Spawn::create(cocos2d::ScaleTo::create(0.12f, getScale()*1.3f), FadeOut::create(0.12f), nullptr),
         CallFunc::create([this]{
-            for (auto& cb : collectedSunListeners_) cb(this);
+            for (auto& cb : collectedSunListeners_) {
+                if (cb) cb(this);
+            }
             removeFromParent();  // after collecting delete
         }),
         nullptr));

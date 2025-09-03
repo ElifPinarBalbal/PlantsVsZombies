@@ -9,7 +9,7 @@
 #include <vector>
 #include <unordered_map>
 
-enum class PlantType {PeaShooter, PotatoMine};
+enum class PlantType {PeaShooter, PotatoMine, BluePeaShooter};
 
 class PlantsMenu : public cocos2d::Node{
 public:

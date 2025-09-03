@@ -34,6 +34,7 @@ bool PlantCard::init() {
 }
 
 void PlantCard::setPlantCardImage(const std::string& plantCardImage) {
+    plantCardImagePath_ = plantCardImage;
     if (!plantCardImage_) {
         plantCardImage_ = cocos2d::Sprite::create(plantCardImage);
         addChild(plantCardImage_, zOrders::PLANT_CARD_IMAGE_Z_ORDER);

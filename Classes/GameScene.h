@@ -34,6 +34,7 @@
 #include "Plants/PeaShooter.h"
 #include "Controllers/ZombieController.h"
 #include "UIComponents/PlantsMenu.h"
+#include "UIComponents/ScoreBoard.h"
 
 namespace gridSize
 {
@@ -88,6 +89,10 @@ private:
     cocos2d::Node* mSunHUD = nullptr;
     cocos2d::DrawNode* mSunBoxGeometry = nullptr;
 
+    cocos2d::Sprite* mSunImage                          = nullptr;
+    float            mSunImageScale                     = 0.55f;
+    float            mSunGapBetweenImageAndAmount       = 8.f;
+
     void initSunUI();
     void updateSunBoxGeometry();
     void addSun(int sunAmount);
@@ -97,6 +102,16 @@ private:
 
     // Plant MENU - HUD layer
     PlantsMenu* plantsMenu_ = nullptr;
+    ScoreBoard* scoreBoard_ = nullptr;
+
+    bool           mDragging = false;
+    cocos2d::Sprite* mDragGhost = nullptr;
+    PlantType      mDragType;
+    int            mDragCost = 0;
+
+    bool isGameEnded_ = false;
+    int  numberOfTargets_ = 5;
+    int  numberOfKills_ = 0;
 
     // convert row col index
     static constexpr  int index(int row, int col)
@@ -124,6 +139,10 @@ private:
         mPlants[index(row, col)] = p;
     }
     void unMarkCellForDeadPlant(PlantBase* plant);
+
+    void onWin();
+    void onLose();
+    void showLevelEndPopup(bool didWin);
 };
 
 #endif // __SECOND_SCENE_H__

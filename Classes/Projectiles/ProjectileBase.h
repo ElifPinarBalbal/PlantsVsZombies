@@ -20,7 +20,7 @@ public:
     void startShootingProjectile();
 
 protected:  // can be overriden by subclasses-only
-    virtual const char* spriteFile() const { return "pea.png"; }
+    virtual const char* getImagePath() const { return "pea.png"; }
     virtual void setupDefaults() {
         setScale(0.9f);
     }

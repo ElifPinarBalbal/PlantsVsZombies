@@ -17,7 +17,7 @@ public:
     }
 
 protected:
-    const char* spriteFile() const override { return "pea.png"; }
+    const char* getImagePath() const override { return "pea.png"; }
     void setupDefaults() override {
         setScale(0.9f);
     }

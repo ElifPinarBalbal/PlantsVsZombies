@@ -25,26 +25,39 @@ Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.
 #ifndef __HELLOWORLD_SCENE_H__
 #define __HELLOWORLD_SCENE_H__
 
-#include "ui/UIButton.h"
-#include  "cocos/2d/CCNode.h"
-#include  "cocos/2d/CCSprite.h"
-#include  "cocos/2d/CCScene.h"
-#include  "cocos/2d/CCLabel.h"
+#pragma once
+#include "cocos/2d/CCScene.h"
+#include "cocos/2d/CCLabel.h"
+#include "cocos/2d/CCDrawNode.h"
+#include "cocos/2d/CCSprite.h"
 
 class SplashScene : public cocos2d::Scene
 {
 public:
-    static cocos2d::Scene* createScene();
-
-    virtual bool init();
-    // a selector callback
-    void menuCloseCallback(cocos2d::Ref* pSender);
-
-    // implement the "static create()" method manually
+    static SplashScene* createScene();
     CREATE_FUNC(SplashScene);
-private:
-    cocos2d::Label* mLabel = nullptr;
 
+    bool init() override;
+
+private:
+    // flow
+    void RunSplash();
+    void CreateProgressBar();
+    void UpdateProgressBar(float dt);
+    void GoNextScene();
+    cocos2d::Sprite*  mSplashLogo   = nullptr;
+
+    cocos2d::Node*      mBarRootNode      = nullptr;
+    cocos2d::DrawNode*  mBarBackgroundNode= nullptr;
+    cocos2d::DrawNode*  mBarFillNode      = nullptr;
+    cocos2d::Label*     mPercentLabel     = nullptr;
+    cocos2d::Size       mBarSize;
+
+    // timing
+    float mElapsedSec      = 0.f;
+    float mDurationSeconds = 1.8f;
+    bool  mFinished        = false;
 };
+
 
 #endif // __HELLOWORLD_SCENE_H__

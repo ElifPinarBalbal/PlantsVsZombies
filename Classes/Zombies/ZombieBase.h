@@ -7,6 +7,7 @@
 #include <utility>
 
 #include "2d/CCSprite.h"
+#include <cstdint>
 
 class ZombieBase : public cocos2d::Sprite{
 public:
@@ -15,7 +16,7 @@ public:
     bool init() override;
     void update(float dt) override;
     void setHP(float hp)            { hp_ = hp; }
-    float hp() const                { return hp_; }
+    float getHP() const                { return hp_; }
     void zombieTakeDamage(float dmg);
     bool isDead()                   {return dead_;}
     void zombieDie();
@@ -40,6 +41,15 @@ public:
     void zombieStopEating();
     bool isEating() const { return eatingTarget_ != nullptr; }
 
+    // game over logic
+    void setLosePositionX(float x) {losePositionX_ = x;}
+    std::function<void(ZombieBase*)> onReachedHouse;
+
+    void startWalkSqueeze();
+    void stopWalkSqueeze();
+
+    void addHitFlashEffect();
+
 protected:
     virtual const char* getImagePath() const { return "zombie.png"; }
     virtual void setupDefaults() {
@@ -56,8 +66,16 @@ protected:
     float biteInterval_         =   0.8f;
     float biteDamage_           =   20.f;
     float savedStopX_           =   0.f;
+    float losePositionX_                =   -1000.f;
     int row_                    =   -1;
     bool dead_                  =   false;
+
+    float baseScaleX_           = 1.0f;
+    float baseScaleY_           = 1.0f;
+    cocos2d::Action* walkSqueezeAction_ = nullptr;
+
+    cocos2d::Action* hitFlashEffect_ = nullptr;
+    uint8_t baseOpacity_            = 255;
 
     DeathCallback onDeath_{nullptr};
     std::vector<DeathCallbackScore> deathListeners_;       // notify scene for score update

@@ -44,6 +44,8 @@
 #include "Controllers/SunController.h"
 
 #include "2d/CCActionInterval.h"
+#include "Plants/BluePeaShooter.h"
+#include "ui/UIButton.h"
 #include "UIComponents/PlantsMenu.h"
 
 USING_NS_CC;
@@ -91,6 +93,8 @@ namespace zOrders
     constexpr int M_SUN_LABEL_Z_ORDER = 1;
     constexpr int SUN_CONTROLLER_Z_ORDER = 20;
     constexpr int PLANTS_MENU_Z_ORDER = 1000;
+    constexpr int BACK_COLOR_LAYER_Z_ORDER = 5000;
+    constexpr int M_DRAG_GHOST_Z_ORDER = 3000;
 }
 
 namespace
@@ -253,6 +257,7 @@ void OnUserTouchMove(cocos2d::Touch* touch, cocos2d::Event* event)
     HighlightCell(x)
 }*/
 
+
 void GameScene::setupGridHover()
 {
     mHoverRect = cocos2d::DrawNode::create();
@@ -262,9 +267,11 @@ void GameScene::setupGridHover()
     touchListener->onTouchBegan = std::bind(&OnUserTouch, std::placeholders::_1, std::placeholders::_2);
     touchListener->onTouchMoved = std::bind(&OnUserTouchMove, std::placeholders::_1, std::placeholders::_2);
 */
-    auto listener = cocos2d::EventListenerMouse::create();
+
+    auto* listener = cocos2d::EventListenerMouse::create();
     listener->onMouseMove = [this](cocos2d::EventMouse* event)
     {
+        if (isGameEnded_) return;
         cocos2d::Vec2 pos = event->getLocationInView();
         auto vs = cocos2d::Director::getInstance()->getVisibleSize();
         auto origin = cocos2d::Director::getInstance()->getVisibleOrigin();
@@ -304,7 +311,10 @@ void GameScene::setupGridHover()
             mHoverRect->drawSolidPoly(rect, 4, hoverColor);
         }
     };
+
     listener->onMouseDown = [this](cocos2d::EventMouse* event) {
+        if (isGameEnded_) return;
+        if (mDragging) return;
         if (event->getMouseButton() != cocos2d::EventMouse::MouseButton::BUTTON_LEFT)
             return;
 
@@ -386,6 +396,28 @@ void GameScene::setupGridHover()
                 }
             } break;
 
+            case PlantType::BluePeaShooter: {
+                auto* bluePeaShooter = BluePeaShooter::create();
+                if (!bluePeaShooter) return;
+
+                bluePeaShooter->setPosition(CellCenter(col, row));
+                bluePeaShooter->setName("BluePeaShooter");
+                this->addChild(bluePeaShooter, zOrders::PEASHOOTER_Z_ORDER);
+
+                if (auto* plantController = this->getChildByName<PlantController*>("PlantController"))
+                    plantController->addPlant(bluePeaShooter, row);
+
+                markCell(row, col, bluePeaShooter);
+                bluePeaShooter->setOnDeath([this](PlantBase* p){ this->unMarkCellForDeadPlant(p); });
+
+                for (auto* z : zombieController_->getZombies()) {
+                    if (isInTheSameRowAndFront(bluePeaShooter, z) && whichRowFromY(z->getPositionY()) != -1) {
+                        bluePeaShooter->startAutoFire(z, this, zOrders::PEA_Z_ORDER);
+                        break;
+                    }
+                }
+            } break;
+
             case PlantType::PotatoMine: {
                 auto* potatoMine = PotatoMine::create();
                 if (!potatoMine) return;
@@ -407,6 +439,7 @@ void GameScene::setupGridHover()
     };
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
 }
+
 
 // row number finder
 int GameScene::whichRowFromY (float positionY) const
@@ -476,6 +509,14 @@ void GameScene::CreateUI(const cocos2d::Vec2& origin, const cocos2d::Size& visib
 
     zombieController_ = ZombieController::create();
     this->addChild(zombieController_, zOrders::ZOMBIE_Z_ORDER);
+
+    // if zombie passes this X position, game ends and player loses
+    const float losePosX = mGridOrigin.x - 20.f;
+    zombieController_->setLosePositionX(losePosX);
+
+    zombieController_->setOnAnyZombieReachedHouse([this]{
+        if (!isGameEnded_) onLose();
+    });
 
     int numOfZombies = 5;
     zombieController_->spawnZombies(
@@ -618,13 +659,62 @@ void GameScene::hookScoreToNewZombies() {
 
         zombie->addOnDeath([this](ZombieBase*) {
             ++mScore;
+            ++numberOfKills_;
             if (mScoreLabel) {
                 mScoreLabel->setString("Score: " + std::to_string(mScore));
                 updateScoreBoxGeometry();
+                if (!isGameEnded_ && numberOfKills_ >= numberOfTargets_) onWin();
             }
         });
     }
 }
+
+void GameScene::onWin()
+{
+    showLevelEndPopup(true);
+}
+
+void GameScene::onLose()
+{
+    showLevelEndPopup(false);
+}
+
+void GameScene::showLevelEndPopup(bool didWin)
+{
+    isGameEnded_ = true;
+
+    auto* backColorLayer = cocos2d::LayerColor::create(cocos2d::Color4B(0,0,0,160));
+    backColorLayer->setContentSize(Director::getInstance()->getVisibleSize());
+    this->addChild(backColorLayer, zOrders::BACK_COLOR_LAYER_Z_ORDER);
+
+    auto* panel = cocos2d::Node::create();
+    panel->setContentSize({420.f, 220.f});
+    panel->setAnchorPoint(cocos2d::Vec2::ANCHOR_MIDDLE);
+    panel->setPosition(Director::getInstance()->getVisibleSize()/2);
+    backColorLayer->addChild(panel);
+
+    auto* popUpBox = cocos2d::DrawNode::create();
+    panel->addChild(popUpBox);
+    auto s = panel->getContentSize();
+    popUpBox->drawSolidRect({0,0}, {s.width, s.height}, Color4F(cocos2d::Color4B(222, 184, 135, 255)));
+    popUpBox->drawRect({0,0}, {s.width, s.height}, cocos2d::Color4F(1,1,1,0.9f));
+
+    auto* popUpTitle = cocos2d::Label::createWithTTF(
+        didWin ? "Congratulations!" : "Game Over",
+        "fonts/Marker Felt.ttf", 40);
+    popUpTitle->setPosition({s.width*0.5f, s.height*0.7f});
+    panel->addChild(popUpTitle);
+
+    auto* replayLabel = cocos2d::Label::createWithTTF("Replay", "fonts/Marker Felt.ttf", 32);
+    auto* replayItem  = cocos2d::MenuItemLabel::create(replayLabel, [this](Ref*){
+        auto* popUpScene = GameScene::createScene();
+        Director::getInstance()->replaceScene(popUpScene);
+    });
+    auto* menu = cocos2d::Menu::create(replayItem, nullptr);
+    menu->setPosition({s.width*0.5f, s.height*0.3f});
+    panel->addChild(menu);
+}
+
 
 bool GameScene::init()
 {
@@ -632,7 +722,6 @@ bool GameScene::init()
     {
         return false;
     }
-
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
@@ -661,13 +750,143 @@ bool GameScene::init()
     const auto visSize = Director::getInstance()->getVisibleSize();
     const auto visOrigin = Director::getInstance()->getVisibleOrigin();
     plantsMenu_->setAnchorPoint(Vec2::ANCHOR_TOP_LEFT);
-    plantsMenu_->setPosition(visOrigin + Vec2(18.f, visSize.height - 140.f));
+    plantsMenu_->setPosition(visOrigin + Vec2(18.f, visSize.height - 70.f));
 
     auto* peaCard = plantsMenu_->addSlot(PlantType::PeaShooter, 20, "peaShooter.png", 0.20f);
     peaCard->setPlantCardSelected(true);
 
-    plantsMenu_->addSlot(PlantType::PotatoMine, 30, "potatoMine.png", 0.85f);
+    plantsMenu_->addSlot(PlantType::BluePeaShooter, 40, "peaShooterBlue.png", 0.30f);
+
+    plantsMenu_->addSlot(PlantType::PotatoMine, 30, "potatoMine.png", 0.75f);
     plantsMenu_->setSunAmount(mSun);
+
+    plantsMenu_->onCardDragBegan = [this](PlantType type, PlantCard* card)
+    {
+        if (isGameEnded_) return;
+        if (!card || !card->getPlantCardEnabled()) return;
+        mDragging = true;
+        mDragType = type;
+        mDragCost = card->getPlantCardCost();
+
+        // make a ghost sprite that follows the cursor
+        mDragGhost = cocos2d::Sprite::create(card->getPlantCardImagePath());
+        mDragGhost->setScale(card->getPlantCardImageScale());
+        mDragGhost->setOpacity(180);
+        this->addChild(mDragGhost, zOrders::M_DRAG_GHOST_Z_ORDER);
+    };
+
+    auto* dragMove = cocos2d::EventListenerMouse::create();
+    dragMove->onMouseMove = [this](cocos2d::EventMouse* e){
+        if (isGameEnded_) return;
+        if (!mDragging || !mDragGhost) return;
+        const cocos2d::Vec2 pos = e->getLocation();
+        mDragGhost->setPosition(pos);
+    };
+    _eventDispatcher->addEventListenerWithSceneGraphPriority(dragMove, this);
+
+    // After adding dragMove listener in GameScene::init()
+auto* dragUp = cocos2d::EventListenerMouse::create();
+dragUp->onMouseUp = [this](cocos2d::EventMouse* e){
+    if (isGameEnded_) return;
+    if (!mDragging) return;
+    mDragging = false;
+
+    auto cleanupGhost = [this](){
+        if (mDragGhost) { mDragGhost->removeFromParent(); mDragGhost = nullptr; }
+    };
+    const cocos2d::Vec2 pos = e->getLocation();
+
+    // compute grid col/row (same logic as onMouseMove in setupGridHover)
+    int col = static_cast<int>((pos.x - mGridOrigin.x) / mCellSize.width);
+    int row = static_cast<int>((pos.y - mGridOrigin.y) / mCellSize.height);
+
+    // validate drop
+    if (col < 0 || col >= gridSize::GRID_COLS ||
+        row < 0 || row >= gridSize::GRID_ROWS ||
+        cellOccupied(row, col)) {
+        cleanupGhost();
+        return;
+    }
+
+    if (!spendSun(mDragCost)) {
+        if (mSunHUD) {
+            mSunHUD->runAction(cocos2d::Sequence::create(
+                cocos2d::TintTo::create(0.05f, 255,120,120),
+                cocos2d::TintTo::create(0.15f, 255,255,255),
+                nullptr));
+        }
+        cleanupGhost();
+        return;
+    }
+
+    switch (mDragType) {
+        case PlantType::PeaShooter: {
+            auto* pea = PeaShooter::create();
+            if (!pea) { cleanupGhost(); return; }
+            pea->setPosition(CellCenter(col, row));
+            pea->setName("PeaShooter");
+            this->addChild(pea, zOrders::PEASHOOTER_Z_ORDER);
+
+            if (auto* pc = this->getChildByName<PlantController*>("PlantController"))
+                pc->addPlant(pea, row);
+
+            markCell(row, col, pea);
+            pea->setOnDeath([this](PlantBase* p){ this->unMarkCellForDeadPlant(p); });
+
+            // optional: shoot immediately if a zombie is already in front
+            for (auto* z : zombieController_->getZombies()) {
+                if (isInTheSameRowAndFront(pea, z) &&
+                    whichRowFromY(z->getPositionY()) != -1) {
+                    pea->startAutoFire(z, this, zOrders::PEA_Z_ORDER);
+                    break;
+                }
+            }
+        } break;
+
+        case PlantType::BluePeaShooter: {
+            auto* blue = BluePeaShooter::create();
+            if (!blue) { cleanupGhost(); return; }
+            blue->setPosition(CellCenter(col, row));
+            blue->setName("BluePeaShooter");
+            this->addChild(blue, zOrders::PEASHOOTER_Z_ORDER);
+
+            if (auto* pc = this->getChildByName<PlantController*>("PlantController"))
+                pc->addPlant(blue, row);
+
+            markCell(row, col, blue);
+            blue->setOnDeath([this](PlantBase* p){ this->unMarkCellForDeadPlant(p); });
+
+            for (auto* z : zombieController_->getZombies()) {
+                if (isInTheSameRowAndFront(blue, z) &&
+                    whichRowFromY(z->getPositionY()) != -1) {
+                    blue->startAutoFire(z, this, zOrders::PEA_Z_ORDER);
+                    break;
+                    }
+            }
+        } break;
+
+
+        case PlantType::PotatoMine: {
+            auto* mine = PotatoMine::create();
+            if (!mine) { cleanupGhost(); return; }
+            mine->setPosition(CellCenter(col, row));
+            mine->setName("PotatoMine");
+            this->addChild(mine, zOrders::PEASHOOTER_Z_ORDER);
+
+            if (auto* pc = this->getChildByName<PlantController*>("PlantController"))
+                pc->addPlant(mine, row);
+
+            markCell(row, col, mine);
+            mine->setOnDeath([this](PlantBase* p){ this->unMarkCellForDeadPlant(p); });
+        } break;
+    }
+
+    cleanupGhost();
+};
+_eventDispatcher->addEventListenerWithSceneGraphPriority(dragUp, this);
+
+
+
 
     initSunUI();
 

@@ -21,132 +21,132 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  ****************************************************************************/
-
 #include "SplashScene.h"
-#include "cocos/2d/CCMenu.h"
-#include "cocos/2d/CCMenuItem.h"
-#include "cocos/2d/CCLabel.h"
-#include "CCDirector.h"
 #include "GameScene.h"
-#include "2d/CCTransition.h"
 
-USING_NS_CC;
+#include <cocos/2d/CCLayer.h>
+#include <cocos/2d/CCAction.h>
+#include <cocos/2d/CCTransition.h>
 
-template <typename T, typename... Args>
-T* CreateCocosObj(Args... args)
-{
-    auto* ret = T::create(std::forward<Args>(args)...);
-    if (!ret)
-    {
-#if COCOS2D_DEBUG == 1
-        CCLOGERROR("Failed to create Cocos2d-x object of type: %s", typeid(T).name());
-#endif
-        return nullptr;
-    }
-    return ret;
+#include "CCDirector.h"
+#include "ccUTF8.h"
+#include "2d/CCActionInterval.h"
+
+using namespace cocos2d;
+
+namespace {
+    constexpr float FADE_IN_DUR  = 0.5f;
+    const std::string LOGO_PATH  = "sunFlower.png";
+
+    inline Color4F bgFill()   { return Color4F(1, 1, 1, 0.10f); }
+    inline Color4F barFill()  { return Color4F(0.29f, 0.78f, 0.45f, 1.0f); }
+    inline Color4F barEdge()  { return Color4F(1, 1, 1, 0.35f); }
 }
 
-namespace zOrders
-{
-    constexpr int MENU_Z_ORDER = 1;
-    constexpr int GO_BUTTON_Z_ORDER = 2;
-    constexpr int MLABEL_Z_ORDER = 1;
-}
-using namespace cocos2d::ui;
-
-Scene* SplashScene::createScene()
+SplashScene* SplashScene::createScene()
 {
     return SplashScene::create();
 }
 
-// Print useful error message instead of segfaulting when files are not there.
-static void problemLoading(const char* filename)
-{
-    printf("Error while loading: %s\n", filename);
-    printf("Depending on how you compiled you might have to add 'Resources/' in front of filenames in HelloWorldScene.cpp\n");
-}
-
-// on "init" you need to initialize your instance
 bool SplashScene::init()
 {
-    if ( !Scene::init() )
-    {
-        return false;
-    }
-
-    auto visibleSize = Director::getInstance()->getVisibleSize();
-    auto width = visibleSize.width / 2;
-    auto height = visibleSize.height / 2;
-    Vec2 origin = Director::getInstance()->getVisibleOrigin();
-
-    auto closeItem = MenuItemImage::create(
-                                           "CloseNormal.png",
-                                           "CloseSelected.png",
-                                           CC_CALLBACK_1(SplashScene::menuCloseCallback, this));
-
-    if (closeItem == nullptr ||
-        closeItem->getContentSize().width <= 0 ||
-        closeItem->getContentSize().height <= 0)
-    {
-        problemLoading("'CloseNormal.png' and 'CloseSelected.png'");
-    }
-    else
-    {
-        float x = origin.x + visibleSize.width - closeItem->getContentSize().width/2;
-        float y = origin.y + closeItem->getContentSize().height/2;
-        closeItem->setPosition(Vec2(x,y));
-    }
-
-    auto menu = Menu::create(closeItem, NULL);
-    menu->setPosition(Vec2::ZERO);
-    this->addChild(menu, zOrders::MENU_Z_ORDER);
-
-    auto go_button = cocos2d::ui::Button::create("Red_button.png", "Red_button.png");
-    go_button->setPosition(visibleSize/2);
-    go_button->setTitleText("Go!");
-    go_button->setTitleFontSize(35);
-    go_button->setTitleAlignment(cocos2d::TextHAlignment::CENTER, cocos2d::TextVAlignment::CENTER);    // to put the title at the center of the button
-    go_button->addTouchEventListener([&](Ref* sender, Widget::TouchEventType type)
-    {
-        if (type == cocos2d::ui::Widget::TouchEventType::ENDED) {
-        // Use pushScene so we can pop back to this exact scene
-        cocos2d::Director::getInstance()->pushScene(
-            cocos2d::TransitionFade::create(0.3f, GameScene::createScene())
-        );
-    }
-    });
-
-    this->addChild(go_button, zOrders::GO_BUTTON_Z_ORDER);
-
-     mLabel = cocos2d::Label::createWithTTF("Let's Start!", "fonts/Marker Felt.ttf", 42);
-    if (mLabel == nullptr)
-    {
-        problemLoading("'fonts/Marker Felt.ttf'");
-    }
-    else
-    {
-        // position the label on the center of the screen
-        mLabel->setPosition(Vec2(origin.x + visibleSize.width/2,
-                                origin.y + visibleSize.height - mLabel->getContentSize().height*10));
-
-        // add the label as a child to this layer
-        this->addChild(mLabel, zOrders::MLABEL_Z_ORDER);
-    }
-
-    if (auto* pea = CreateCocosObj<cocos2d::Sprite>("pea.png")) {
-        pea->setPosition(100, 120);
-        addChild(pea, 10);
-    }
-
-    // non-working template try
-    /*if (auto* bad = CreateCocosObj<cocos2d::Sprite>("nonexistent.png")) {
-        bad->setPosition(200, 200);
-        addChild(bad);
-    }*/
+    if (!Scene::init()) return false;
+    addChild(LayerColor::create(Color4B(10, 10, 14, 255)), -1);
+    RunSplash();
     return true;
 }
 
-void SplashScene::menuCloseCallback(Ref* pSender)
+void SplashScene::RunSplash()
 {
-    Director::getInstance()->end();
+    const auto visibleSize = _director->getVisibleSize();
+
+    mSplashLogo = Sprite::create(LOGO_PATH);
+    if (!mSplashLogo)
+    {
+        CCLOG("[SplashScene] Missing logo at %s", LOGO_PATH.c_str());
+        GoNextScene();
+        return;
+    }
+
+    mSplashLogo->setOpacity(0);
+    mSplashLogo->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+    mSplashLogo->setPosition(Vec2(visibleSize.width * 0.5f, visibleSize.height * 0.60f));
+    addChild(mSplashLogo);
+
+    const float maxFactor = 0.80f;
+    const float maxWidth  = visibleSize.width  * maxFactor;
+    const float maxHeight = visibleSize.height * maxFactor;
+    const Size  bb        = mSplashLogo->getBoundingBox().size;
+    const float logoScale = std::min(1.0f, std::min(maxWidth / bb.width, maxHeight / bb.height));
+    mSplashLogo->setScale(logoScale);
+
+    mSplashLogo->runAction(FadeIn::create(FADE_IN_DUR));
+
+    CreateProgressBar();
+    schedule(CC_SCHEDULE_SELECTOR(SplashScene::UpdateProgressBar));
+}
+
+void SplashScene::CreateProgressBar()
+{
+    const auto visibleSize = _director->getVisibleSize();
+
+    const float width  = std::min(visibleSize.width * 0.70f, 640.0f);
+    const float height = std::max(visibleSize.height * 0.018f, 16.0f);
+    mBarSize = Size(width, height);
+
+    mBarRootNode = Node::create();
+    mBarRootNode->setContentSize(mBarSize);
+    mBarRootNode->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+    mBarRootNode->setPosition(Vec2(visibleSize.width * 0.5f, visibleSize.height * 0.38f));
+    addChild(mBarRootNode);
+
+    mBarBackgroundNode = DrawNode::create();
+    const Vec2 bl(0, 0), tr(mBarSize.width, mBarSize.height);
+    mBarBackgroundNode->drawSolidRect(bl, tr, bgFill());
+    mBarBackgroundNode->drawRect(bl, tr, barEdge());
+    mBarRootNode->addChild(mBarBackgroundNode);
+
+    mBarFillNode = DrawNode::create();
+    mBarRootNode->addChild(mBarFillNode);
+
+    mPercentLabel = Label::createWithSystemFont("Loading 0%", "Arial", std::max(18.0f, height * 0.9f));
+    mPercentLabel->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+    mPercentLabel->setPosition(Vec2(mBarSize.width * 0.5f, mBarSize.height * 0.5f));
+    mPercentLabel->setTextColor(Color4B(255,255,255,230));
+    mBarRootNode->addChild(mPercentLabel, 2);
+}
+
+void SplashScene::UpdateProgressBar(float dt)
+{
+    if (mFinished) { unschedule(CC_SCHEDULE_SELECTOR(SplashScene::UpdateProgressBar)); return; }
+
+    mElapsedSec += dt;
+    float t = mElapsedSec / mDurationSeconds;
+    t = std::min(t, 1.0f);
+
+    mBarFillNode->clear();
+    const float w = mBarSize.width * t;
+    if (w > 0.0f)
+        mBarFillNode->drawSolidRect(Vec2(0, 0), Vec2(w, mBarSize.height), barFill());
+
+    const int pct = static_cast<int>(roundf(t * 100.0f));
+    mPercentLabel->setString(StringUtils::format("Loading %d%%", pct));
+
+    if (t >= 1.0f)
+    {
+        unschedule(CC_SCHEDULE_SELECTOR(SplashScene::UpdateProgressBar));
+        GoNextScene();
+    }
+}
+
+void SplashScene::GoNextScene()
+{
+    if (mFinished) return;
+    mFinished = true;
+
+    if (mSplashLogo) mSplashLogo->stopAllActions();
+
+    auto next = GameScene::createScene();
+    auto transition = TransitionFade::create(0.35f, next, Color3B::BLACK);
+    _director->replaceScene(transition);
 }

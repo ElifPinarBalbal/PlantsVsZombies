@@ -25,6 +25,12 @@ namespace zombieEat
 bool ZombieBase::init() {
     if (!Sprite::initWithFile(getImagePath())) return false;
     setupDefaults();
+
+    baseScaleX_ = this->getScaleX();
+    baseScaleY_ = this->getScaleY();
+    baseOpacity_ = getOpacity();
+
+    startWalkSqueeze();
     scheduleUpdate();  // we used scheduler to move the zombie periodically
     return true;
 }
@@ -38,6 +44,70 @@ void ZombieBase::update(float dt)
         x = stopX_;
     }
     setPositionX(x);
+
+    if (!isDead() && getPositionX() <= losePositionX_) {
+        if (onReachedHouse) onReachedHouse(this);
+    }
+}
+
+
+void ZombieBase::startWalkSqueeze()
+{
+    if (walkSqueezeAction_) return;
+
+    const float sx1 = baseScaleX_ * 1.00f;
+    const float sy1 = baseScaleY_ * 0.985f;
+    const float sx2 = baseScaleX_ * 1.00f;
+    const float sy2 = baseScaleY_ * 1.015f;
+
+    auto down = cocos2d::EaseSineInOut::create(
+                    cocos2d::ScaleTo::create(0.35f, sx1, sy1));
+    auto up   = cocos2d::EaseSineInOut::create(
+                    cocos2d::ScaleTo::create(0.35f, sx2, sy2));
+    auto back = cocos2d::EaseSineInOut::create(
+                    cocos2d::ScaleTo::create(0.35f, baseScaleX_, baseScaleY_));
+
+    auto seq  = cocos2d::Sequence::create(down, up, back, nullptr);
+    walkSqueezeAction_ = cocos2d::RepeatForever::create(seq);
+    this->runAction(walkSqueezeAction_);
+}
+
+void ZombieBase::stopWalkSqueeze()
+{
+    if (walkSqueezeAction_) {
+        this->stopAction(walkSqueezeAction_);
+        walkSqueezeAction_ = nullptr;
+    }
+    this->setScaleX(baseScaleX_);
+    this->setScaleY(baseScaleY_);
+}
+
+void ZombieBase::addHitFlashEffect()
+{
+    if (hitFlashEffect_) {
+        stopAction(hitFlashEffect_);
+        hitFlashEffect_ = nullptr;
+    }
+    auto flashUp = cocos2d::Spawn::create(
+        cocos2d::TintTo::create(0.05f, 255, 255, 255),
+        cocos2d::FadeTo::create(0.05f, baseOpacity_),
+        cocos2d::ScaleTo::create(0.05f, baseScaleX_ * 1.01f, baseScaleY_ * 0.99f),
+        nullptr
+    );
+
+    auto flashDown = cocos2d::Spawn::create(
+        cocos2d::TintTo::create(0.08f, 255, 255, 255),
+        cocos2d::FadeTo::create(0.08f, baseOpacity_),
+        cocos2d::ScaleTo::create(0.08f, baseScaleX_, baseScaleY_),
+        nullptr
+    );
+
+    hitFlashEffect_ = cocos2d::Sequence::create(
+        flashUp, flashDown,
+        cocos2d::CallFunc::create([this]{ hitFlashEffect_ = nullptr; }),
+        nullptr
+    );
+    runAction(hitFlashEffect_);
 }
 
 int ZombieBase::getRow() const
@@ -92,6 +162,12 @@ void ZombieBase::zombieDie()
 
     dead_ = true;
     unscheduleUpdate();
+    stopWalkSqueeze();
+    if (hitFlashEffect_) { stopAction(hitFlashEffect_); hitFlashEffect_ = nullptr; }
+    setOpacity(baseOpacity_);
+    setScaleX(baseScaleX_);
+    setScaleY(baseScaleY_);
+    setColor(cocos2d::Color3B::WHITE);
 
     auto fall  = cocos2d::EaseSineIn::create(
                   cocos2d::Spawn::create(

@@ -30,7 +30,6 @@ private:
             this->addChild(sun, zOrders::SUN_Z_ORDER);
             sun->startSunFalling(fallArea_);
             suns_.push_back(sun);
-
             sun->addOnSunCollected([this](Sun* whichSun){
                 suns_.erase(std::remove(suns_.begin(), suns_.end(), whichSun), suns_.end());
             });

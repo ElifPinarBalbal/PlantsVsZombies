@@ -11,6 +11,9 @@ namespace intervals
 {
     constexpr float SHOOT_INTERVAL_SECONDS = 0.8f;
 }
+ProjectileBase* PeaShooter::createProjectile() {
+    return Pea::create();
+}
 
 void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, int pea_Z_Order)
 {
@@ -37,15 +40,15 @@ void PeaShooter::startAutoFire(class ZombieBase *target, cocos2d::Node *world, i
         }
 
         // create pea - there is zombie :)
-        auto* pea = Pea::create();
-        if (!pea) return;
+        auto* projectile = createProjectile();
+        if (!projectile) return;
 
         const cocos2d::Vec2 muzzleOffset(40.f, 20.f);
-        pea->setPosition(this->getPosition() + muzzleOffset);
-        pea->setVelocity({300.f, 0.f});
-        pea->giveDamage(20.f);
-        pea->setTarget(target);
-        world->addChild(pea, pea_Z_Order);
-        pea->startShootingProjectile();
+        projectile->setPosition(this->getPosition() + muzzleOffset);
+        projectile->setVelocity({300.f, 0.f});
+        projectile->giveDamage(this->getDamage());
+        projectile->setTarget(target);
+        world->addChild(projectile, pea_Z_Order);
+        projectile->startShootingProjectile();
        }, intervals::SHOOT_INTERVAL_SECONDS, "auto_fire_timer");
 }

@@ -29,6 +29,8 @@ public:
     void setPlantCardImageScale(float plantCardImageScale);
     float getPlantCardImageScale() const {return plantCardImageScale_;};
 
+    const std::string& getPlantCardImagePath() const { return plantCardImagePath_; }
+
     // callback when the card is pressed or drag & dropped
     std::function<void(PlantCard*)> onPlantCardPressed;
     std::function<void(PlantCard*)> onDragBegan;
@@ -47,6 +49,8 @@ private:
     bool plantCardEnabled_   = false;
     bool plantCardSelected_  = false;
     float plantCardImageScale_ = 0.20f;
+    std::string plantCardImagePath_;
+
 };
 
 #endif //PLANTSVSZOMBIES_PLANTCARD_H
