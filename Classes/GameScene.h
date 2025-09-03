@@ -33,6 +33,8 @@
 #include  "Plants/PlantBase.h"
 #include "Plants/PeaShooter.h"
 #include "Controllers/ZombieController.h"
+#include "UIComponents/PlantsMenu.h"
+#include "UIComponents/ScoreBoard.h"
 
 namespace gridSize
 {
@@ -71,6 +73,45 @@ private:
     cocos2d::Vec2 mGridOrigin;
     std::array<PlantBase*, gridSize::GRID_SIZE> mPlants{};   // nullptr = empty
 
+    // Score HUD
+    int mScore = 0;   // shows the number of died zombies
+    cocos2d::Label* mScoreLabel = nullptr;
+    cocos2d::Node* mScoreHUD = nullptr;
+    cocos2d::DrawNode* mScoreBoxGeometry = nullptr;
+
+    void initScoreUI();
+    void hookScoreToNewZombies();
+    void updateScoreBoxGeometry();   // if the score's number of digits change, then box will also expand
+
+    // SUN - currency HUD
+    int mSun = 40;
+    cocos2d::Label* mSunLabel = nullptr;
+    cocos2d::Node* mSunHUD = nullptr;
+    cocos2d::DrawNode* mSunBoxGeometry = nullptr;
+
+    cocos2d::Sprite* mSunImage                          = nullptr;
+    float            mSunImageScale                     = 0.55f;
+    float            mSunGapBetweenImageAndAmount       = 8.f;
+
+    void initSunUI();
+    void updateSunBoxGeometry();
+    void addSun(int sunAmount);
+    bool spendSun(int sunAmount); // returns false if not enough
+
+    class SunController* sunController_ = nullptr;
+
+    // Plant MENU - HUD layer
+    PlantsMenu* plantsMenu_ = nullptr;
+    ScoreBoard* scoreBoard_ = nullptr;
+
+    bool           mDragging = false;
+    cocos2d::Sprite* mDragGhost = nullptr;
+    PlantType      mDragType;
+    int            mDragCost = 0;
+
+    bool isGameEnded_ = false;
+    int  numberOfTargets_ = 5;
+    int  numberOfKills_ = 0;
 
     // convert row col index
     static constexpr  int index(int row, int col)
@@ -81,6 +122,10 @@ private:
     void BuildGroundGrid(const cocos2d::Size& visibleSize, const cocos2d::Vec2& origin);
     cocos2d::Vec2 CellCenter(int col, int row) const;
     cocos2d::Sprite* checkTileAt(int row, int col) const;
+
+    PlantBase *getNearestPlantAheadInRow(int row, float xMin) const;
+    void updateZombieEating();
+
     void setupGridHover();
     int whichRowFromY (float positionY) const;
     bool isInTheSameRow(cocos2d::Node *nodeA, cocos2d::Node *nodeB) const;
@@ -93,6 +138,11 @@ private:
     void markCell(int row, int col, PlantBase* p) {
         mPlants[index(row, col)] = p;
     }
+    void unMarkCellForDeadPlant(PlantBase* plant);
+
+    void onWin();
+    void onLose();
+    void showLevelEndPopup(bool didWin);
 };
 
 #endif // __SECOND_SCENE_H__

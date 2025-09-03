@@ -7,7 +7,7 @@
 #include "cocos/math/CCGeometry.h"
 
 bool ProjectileBase::init() {
-    if (!Sprite::initWithFile(spriteFile())) return false;
+    if (!Sprite::initWithFile(getImagePath())) return false;
     setupDefaults();
     return true;
 }
@@ -86,7 +86,8 @@ bool ProjectileBase::IsHittingTarget() const {
 
 void ProjectileBase::onProjectileHitZombie(ZombieBase* zombie) {
     if (zombie) {
-        zombie->takeDamage(damage_);
+        zombie->addHitFlashEffect();
+        zombie->zombieTakeDamage(damage_);
     }
     this->removeFromParent();
 }

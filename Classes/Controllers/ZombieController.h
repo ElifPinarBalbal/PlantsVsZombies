@@ -17,7 +17,14 @@ public:
 
     const std::vector<ZombieBase*>& getZombies() const { return zombies_; }
 
+    void setLosePositionX(float losePosX);
+    void setOnAnyZombieReachedHouse(std::function<void()> callback);
+
 private:
     std::vector<ZombieBase*> zombies_;
+    int countOfDeadZombies_;        // this will be the score
+
+    float losePosX_ = -1000.f;
+    std::function<void()> onAnyZombieReachedHouse_;
 };
 #endif //PLANTSVSZOMBIES_ZOMBIECONTROLLER_H
